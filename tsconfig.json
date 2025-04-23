@@ -2,9 +2,7 @@
   "compilerOptions": {
     "target": "ES2017",
     // Only include the valid Cloudflare Workers types package
-    "types": [
-      "@cloudflare/workers-types"
-    ],
+
     "lib": [
       "dom",
       "dom.iterable",
