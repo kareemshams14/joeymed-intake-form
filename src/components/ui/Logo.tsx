@@ -11,7 +11,7 @@ const Logo = () => {
       className="h-12"
     >
       <img 
-        src="https://joey-med.square.site/uploads/b/3c0b68a0-e7ad-11ed-8d29-c1c0c15a5c4e/joey-med-logo.png" 
+        src="https://www.joeymed.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo2.7dd72441.png&w=1080&q=100" 
         alt="JoeyMed Logo" 
         className="h-full"
       />
