@@ -27,13 +27,15 @@ const IntakeForm: React.FC = () => {
   /* ------------------ 2.1  State  -------------------------------- */
   const [step, setStep] = useState<number>(1);
 
-  /** TODO: replace mock data with real state, validation, etc. */
+  /** mock data; wire up real data + validation as needed */
   const treatments: Treatment[] = [
     { id: 'weight-loss', name: 'Weight-Loss Program', price: 299 },
     { id: 'ed',          name: 'ED Treatment',        price: 159 },
   ];
 
   const [formData, setFormData] = useState<any>({
+    fullName: '',
+    email: '',
     selectedTreatment: '',
     bmi: undefined,
     weight: undefined,
@@ -45,7 +47,7 @@ const IntakeForm: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const weeksToTarget = 12; // ← stub; compute from state
+  const weeksToTarget = 12; // stub; compute based on dates
 
   /* ------------------ 2.2  Helpers  ----------------------------- */
   const cardVariants = {
@@ -54,7 +56,7 @@ const IntakeForm: React.FC = () => {
     exit: { opacity: 0, x: -20 },
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const prevStep = () => setStep((s) => Math.max(1, s - 1));
@@ -69,7 +71,7 @@ const IntakeForm: React.FC = () => {
       healthQuestions: { ...formData.healthQuestions, [id]: value },
     });
 
-  /** TODO: bring in your real question map */
+  /** placeholder questions */
   const treatmentQuestions: Record<
     string,
     { question: string; type: 'text' | 'select' | 'radio'; options?: string[] }[]
@@ -85,6 +87,83 @@ const IntakeForm: React.FC = () => {
   /* ------------------ 2.3  Step renderer  ----------------------- */
   const renderStep = () => {
     switch (step) {
+      /* ------------------ Step 1 ------------------ */
+      case 1:
+        return (
+          <motion.div
+            key="step1"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md"
+          >
+            <h2 className="text-2xl font-bold mb-4">Welcome to JoeyMed</h2>
+            <p className="text-gray-700 mb-6">
+              Please click below to begin your intake form.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={nextStep}
+                className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Get Started
+              </button>
+            </div>
+          </motion.div>
+        );
+
+      /* ------------------ Step 2 ------------------ */
+      case 2:
+        return (
+          <motion.div
+            key="step2"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md"
+          >
+            <h2 className="text-2xl font-bold mb-4">Tell Us About You</h2>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-gray-700">Full Name</span>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </label>
+              <label className="block">
+                <span className="text-gray-700">Email Address</span>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={prevStep}
+                className="py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Back
+              </button>
+              <button
+                onClick={nextStep}
+                className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Continue
+              </button>
+            </div>
+          </motion.div>
+        );
+
       /* ------------------ Step 3 ------------------ */
       case 3:
         return (
@@ -100,7 +179,6 @@ const IntakeForm: React.FC = () => {
               Select Treatment
             </h2>
 
-            {/* Treatment options */}
             <div className="space-y-4">
               {treatments.map((t) => (
                 <label
@@ -138,7 +216,6 @@ const IntakeForm: React.FC = () => {
               )}
             </div>
 
-            {/* Infographic preview */}
             {formData.selectedTreatment && (
               <div className="mt-6">
                 <TreatmentInfographic
@@ -147,12 +224,10 @@ const IntakeForm: React.FC = () => {
               </div>
             )}
 
-            {/* Trustpilot teaser */}
             <div className="mt-8">
               <TrustpilotReviews businessId="joeymed.com" className="mb-6" />
             </div>
 
-            {/* Nav */}
             <div className="mt-8 flex justify-between">
               <button
                 onClick={prevStep}
@@ -190,7 +265,6 @@ const IntakeForm: React.FC = () => {
               Health Information
             </h2>
 
-            {/* Weight-loss extras */}
             {formData.selectedTreatment === 'weight-loss' && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -226,7 +300,6 @@ const IntakeForm: React.FC = () => {
               </div>
             )}
 
-            {/* Dynamic questions */}
             {formData.selectedTreatment && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
@@ -300,7 +373,6 @@ const IntakeForm: React.FC = () => {
               </div>
             )}
 
-            {/* Nav */}
             <div className="mt-8 flex justify-between">
               <button
                 onClick={prevStep}
@@ -325,11 +397,9 @@ const IntakeForm: React.FC = () => {
   };
 
   /* ------------------------------------------------------------------
-     2.4  Render (must return JSX)
+     2.4  Render
   ------------------------------------------------------------------ */
-  return (
-    <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
-  );
+  return <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>;
 };
 
 export default IntakeForm;
