@@ -1,7 +1,9 @@
-/** @type {import('next').NextConfig} */
+// next.config.js  ← keep it JS (or .cjs / .mjs)
+
+/** @type {import('next').NextConfig} */      // JSDoc is OK
 const nextConfig = {
   reactStrictMode: true,
-  // …any other options
+  // …your other options
 };
 
-module.exports = nextConfig;      // ← CommonJS export Netlify likes
+module.exports = nextConfig;                  // CommonJS export
