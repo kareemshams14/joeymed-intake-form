@@ -1,13 +1,7 @@
-import { NextConfig } from 'next'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  // …any other options
+};
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-}
-
-export default nextConfig
+module.exports = nextConfig;      // ← CommonJS export Netlify likes
