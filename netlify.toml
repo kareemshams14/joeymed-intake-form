@@ -1,9 +1,37 @@
+###########################################################
+#  Netlify configuration for Joey Med Intake Form (Next 13)
+###########################################################
+
+#################################
+#  1. Build & deploy parameters #
+#################################
 [build]
-  command = "npm install --legacy-peer-deps && npm run build"
+  # Netlify will install dependencies automatically,
+  # so we can go straight to the Next.js build.
+  command = "npm run build"
+  # The plugin rewrites the publish directory automatically,
+  # but we keep this for clarity.
   publish = ".next"
 
+#################################
+#  2. Environment overrides     #
+#################################
+[build.environment]
+  # Pin a stable Node LTS version that Next 13 is validated on.
+  NODE_VERSION = "20"
+
+  # Your runtime secrets / public env vars
+  NEXT_PUBLIC_SQUARE_APP_ID  = "****"
+  NEXT_PUBLIC_SQUARE_LOCATION_ID = "****"
+  SQUARE_ACCESS_TOKEN        = "****"
+
+#################################
+#  3. Netlify plugins           #
+#################################
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  # Optional: plugin inputs (leave empty unless you need custom settings)
+  [plugins.inputs]
+    # Example of turning on TypeScript config transpilation if
+    # you rename `next.config.js` to `next.config.ts`
+    # tsConfigPath = "./tsconfig.json"
