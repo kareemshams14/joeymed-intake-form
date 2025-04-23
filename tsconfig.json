@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2017",
+    // Only include the valid Cloudflare Workers types package
     "types": [
-      "@cloudflare/workers-types/2023-07-01"
+      "@cloudflare/workers-types"
     ],
     "lib": [
       "dom",
@@ -29,7 +30,7 @@
       "@/*": [
         "./src/*"
       ]
-    },
+    }
   },
   "include": [
     "next-env.d.ts",
