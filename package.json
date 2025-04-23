@@ -2,14 +2,12 @@
   "name": "premium-joeymed-intake",
   "version": "0.1.0",
   "private": true,
-
   "scripts": {
-    "dev":   "next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint":  "next lint"
+    "lint": "next lint"
   },
-
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
     "cmdk": "^1.1.1",
@@ -41,46 +39,35 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
-
     "autoprefixer": "^10.4.16",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
-
     "embla-carousel-react": "^8.1.0",
     "embla-carousel-autoplay": "^6.0.0",
-
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
-
     "next": "^14.2.5",
     "next-themes": "^0.2.1",
-
     "postcss": "^8.4.33",
-
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.48.2",
     "react-day-picker": "^8.9.1",
-
     "recharts": "^2.9.3",
-
     "tailwind-merge": "^2.0.0",
     "tailwindcss": "^3.4.4",
     "tailwindcss-animate": "^1.0.7",
-
     "use-places-autocomplete": "latest",
     "zod": "^3.22.4",
-
     "input-otp": "latest"
   },
-
   "devDependencies": {
-  "@types/node": "^20.11.19",
-  "@types/react": "^18.2.46",
-  "@types/react-dom": "^18.2.18",
-
-  "typescript": "^5.4.2",
-  "eslint": "^8.57.0",
-  "eslint-config-next": "^14.2.5"
+    "@types/node": "^20.11.19",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "typescript": "^5.4.2",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5"
+  }
 }
