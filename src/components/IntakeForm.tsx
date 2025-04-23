@@ -1,306 +1,214 @@
-'use client';
+// src/components/IntakeForm.tsx
+import React, { useState } from 'react';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import QualificationCard from './cards/QualificationCard';
-import BasicInfoCard from './cards/BasicInfoCard';
-import TreatmentSelectionCard from './cards/TreatmentSelectionCard';
-import DynamicQuestionsCard from './cards/DynamicQuestionsCard';
-import MedicalInfoCard from './cards/MedicalInfoCard';
-import ConsentCard from './cards/ConsentCard';
-import DisqualificationCard from './cards/DisqualificationCard';
-import ProgressBar from './ui/ProgressBar';
-import Logo from './ui/Logo';
+const IntakeForm: React.FC = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    isFloridaResident: false,
+    isOver18: false,
+    name: '',
+    email: '',
+    phone: '',
+    selectedTreatment: ''
+  });
 
-export type FormData = {
-  // Qualification
-  floridaResident: string | null;
-  ageVerification: string | null;
-  telehealthConsent: string | null;
-  
-  // Basic Info
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  zipCode: string;
-  dateOfBirth: string;
-  gender: string | null;
-  
-  // Treatment Selection
-  selectedTreatment: string | null;
-  
-  // Dynamic Questions - Weight Loss
-  weightLossPlan: string | null;
-  currentWeight: string;
-  goalWeight: string;
-  weightLossHistory: string[];
-  metabolicIssues: string | null;
-  
-  // Dynamic Questions - Erectile Dysfunction
-  edProduct: string | null;
-  symptomDuration: string | null;
-  cardiovascularHistory: string | null;
-  nitratesUse: string | null;
-  medicationPreference: string | null;
-  
-  // Dynamic Questions - Sexual Health
-  shProduct: string | null;
-  libidoIssues: string | null;
-  hormonalTherapy: string | null;
-  menopauseStatus: string | null;
-  nasalSensitivity: string | null;
-  
-  // Dynamic Questions - Anti-Aging
-  aaProduct: string | null;
-  energyLevel: string | null;
-  moodLevel: string | null;
-  sleepQuality: string | null;
-  hormoneTherapyHistory: string | null;
-  injectionTolerance: string | null;
-  
-  // Dynamic Questions - Travel Kit
-  travelDestination: string;
-  travelStartDate: string;
-  travelEndDate: string;
-  travelHealthConcerns: string;
-  travelMeds: string[];
-  
-  // Medical Info
-  allergies: string;
-  labWork: string | null;
-  currentMedications: string;
-  preExistingConditions: string;
-  pregnantNursing: string | null;
-  
-  // Consent
-  termsConsent: boolean;
-  medicalConsent: boolean;
-  
-  // Selected Products
-  selectedProducts: Array<{id: string, name: string, price: number}>;
-  upsellProducts: Array<{id: string, name: string, price: number}>;
-};
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    });
+  };
 
-const initialFormData: FormData = {
-  // Qualification
-  floridaResident: null,
-  ageVerification: null,
-  telehealthConsent: null,
-  
-  // Basic Info
-  fullName: '',
-  email: '',
-  phone: '',
-  address: '',
-  city: '',
-  zipCode: '',
-  dateOfBirth: '',
-  gender: null,
-  
-  // Treatment Selection
-  selectedTreatment: null,
-  
-  // Dynamic Questions - Weight Loss
-  weightLossPlan: null,
-  currentWeight: '',
-  goalWeight: '',
-  weightLossHistory: [],
-  metabolicIssues: null,
-  
-  // Dynamic Questions - Erectile Dysfunction
-  edProduct: null,
-  symptomDuration: null,
-  cardiovascularHistory: null,
-  nitratesUse: null,
-  medicationPreference: null,
-  
-  // Dynamic Questions - Sexual Health
-  shProduct: null,
-  libidoIssues: null,
-  hormonalTherapy: null,
-  menopauseStatus: null,
-  nasalSensitivity: null,
-  
-  // Dynamic Questions - Anti-Aging
-  aaProduct: null,
-  energyLevel: null,
-  moodLevel: null,
-  sleepQuality: null,
-  hormoneTherapyHistory: null,
-  injectionTolerance: null,
-  
-  // Dynamic Questions - Travel Kit
-  travelDestination: '',
-  travelStartDate: '',
-  travelEndDate: '',
-  travelHealthConcerns: '',
-  travelMeds: [],
-  
-  // Medical Info
-  allergies: '',
-  labWork: null,
-  currentMedications: '',
-  preExistingConditions: '',
-  pregnantNursing: null,
-  
-  // Consent
-  termsConsent: false,
-  medicalConsent: false,
-  
-  // Selected Products
-  selectedProducts: [],
-  upsellProducts: []
-};
+  const nextStep = () => setStep(step + 1);
+  const prevStep = () => setStep(step - 1);
 
-const IntakeForm = () => {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isDisqualified, setIsDisqualified] = useState(false);
-  const [disqualificationReason, setDisqualificationReason] = useState('');
-  const [totalSteps, setTotalSteps] = useState(7);
-  
-  // Update form data
-  const updateFormData = (data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
+  const isDisqualified = () => {
+    return !formData.isFloridaResident || !formData.isOver18;
   };
-  
-  // Handle disqualification
-  const handleDisqualification = (reason: string) => {
-    setIsDisqualified(true);
-    setDisqualificationReason(reason);
-  };
-  
-  // Handle next step
-  const handleNextStep = () => {
-    setCurrentStep(prev => prev + 1);
-  };
-  
-  // Handle previous step
-  const handlePrevStep = () => {
-    setCurrentStep(prev => prev - 1);
-  };
-  
-  // Handle form submission
-  const handleSubmit = () => {
-    // Prepare data for Square checkout
-    const products = [...formData.selectedProducts];
-    
-    // Add selected upsell products
-    if (formData.upsellProducts.length > 0) {
-      products.push(...formData.upsellProducts);
-    }
-    
-    // Create Square checkout URL with products
-    const squareCheckoutUrl = createSquareCheckoutUrl(products);
-    
-    // Redirect to Square checkout
-    window.location.href = squareCheckoutUrl;
-  };
-  
-  // Create Square checkout URL
-  const createSquareCheckoutUrl = (products: Array<{id: string, name: string, price: number}>) => {
-    // This is a placeholder - in a real implementation, you would construct the proper Square checkout URL
-    // with all the selected products and their IDs
-    const baseUrl = 'https://joey-med.square.site/checkout/';
-    
-    // For demo purposes, we'll just append product IDs
-    const productIds = products.map(p => p.id).join(',');
-    return `${baseUrl}?products=${productIds}`;
-  };
-  
-  // Determine which card to show based on current step and selected treatment
-  const renderCurrentCard = () => {
-    if (isDisqualified) {
-      return (
-        <DisqualificationCard 
-          reason={disqualificationReason} 
-        />
-      );
-    }
-    
-    switch (currentStep) {
-      case 1:
-        return (
-          <QualificationCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onNext={handleNextStep} 
-            onDisqualify={handleDisqualification} 
-          />
-        );
-      case 2:
-        return (
-          <BasicInfoCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onNext={handleNextStep} 
-            onPrev={handlePrevStep} 
-            onDisqualify={handleDisqualification} 
-          />
-        );
-      case 3:
-        return (
-          <TreatmentSelectionCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onNext={handleNextStep} 
-            onPrev={handlePrevStep} 
-          />
-        );
-      case 4:
-        return (
-          <DynamicQuestionsCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onNext={handleNextStep} 
-            onPrev={handlePrevStep} 
-          />
-        );
-      case 5:
-        return (
-          <MedicalInfoCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onNext={handleNextStep} 
-            onPrev={handlePrevStep} 
-          />
-        );
-      case 6:
-        return (
-          <ConsentCard 
-            formData={formData} 
-            updateFormData={updateFormData} 
-            onSubmit={handleSubmit} 
-            onPrev={handlePrevStep} 
-          />
-        );
-      default:
-        return null;
-    }
-  };
-  
+
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      <header className="fixed top-0 left-0 w-full bg-white shadow-sm z-50 px-4 py-3 flex justify-between items-center">
-        <Logo />
-        <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-      </header>
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold text-blue-600 mb-6 text-center">JoeyMed Healthcare Intake</h1>
       
-      <div className="pt-20 pb-10 px-4 flex items-center justify-center min-h-screen">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-3xl"
+      {step === 1 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Qualification</h2>
+          <div className="space-y-2">
+            <label className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                name="isFloridaResident" 
+                checked={formData.isFloridaResident}
+                onChange={handleChange}
+                className="h-4 w-4"
+              />
+              <span>I am a Florida resident</span>
+            </label>
+            
+            <label className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                name="isOver18" 
+                checked={formData.isOver18}
+                onChange={handleChange}
+                className="h-4 w-4"
+              />
+              <span>I am 18 years or older</span>
+            </label>
+          </div>
+          
+          <button 
+            onClick={nextStep}
+            disabled={isDisqualified()}
+            className={`w-full py-2 rounded-md ${isDisqualified() ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
           >
-            {renderCurrentCard()}
-          </motion.div>
-        </AnimatePresence>
+            Continue
+          </button>
+          
+          {isDisqualified() && (
+            <p className="text-red-500 text-sm mt-2">
+              You must be a Florida resident and 18 years or older to use this service.
+            </p>
+          )}
+        </div>
+      )}
+      
+      {step === 2 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Basic Information</h2>
+          <div className="space-y-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <input 
+                type="text" 
+                name="name" 
+                value={formData.name}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input 
+                type="email" 
+                name="email" 
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <input 
+                type="tel" 
+                name="phone" 
+                value={formData.phone}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-between">
+            <button 
+              onClick={prevStep}
+              className="py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Back
+            </button>
+            
+            <button 
+              onClick={nextStep}
+              className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {step === 3 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Treatment Selection</h2>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Select Treatment</label>
+            <select 
+              name="selectedTreatment" 
+              value={formData.selectedTreatment}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+            >
+              <option value="">Select a treatment</option>
+              <option value="weight-loss">Weight Loss</option>
+              <option value="erectile-dysfunction">Erectile Dysfunction</option>
+              <option value="sexual-health">Sexual Health</option>
+              <option value="anti-aging">Anti-Aging & Wellness</option>
+              <option value="travel-kits">Travel Kits</option>
+            </select>
+          </div>
+          
+          <div className="flex justify-between">
+            <button 
+              onClick={prevStep}
+              className="py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Back
+            </button>
+            
+            <button 
+              onClick={nextStep}
+              disabled={!formData.selectedTreatment}
+              className={`py-2 px-4 rounded-md ${!formData.selectedTreatment ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {step === 4 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Summary</h2>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <p><strong>Name:</strong> {formData.name}</p>
+            <p><strong>Email:</strong> {formData.email}</p>
+            <p><strong>Phone:</strong> {formData.phone}</p>
+            <p><strong>Treatment:</strong> {formData.selectedTreatment}</p>
+          </div>
+          
+          <p className="text-sm text-gray-600">
+            Ready to proceed to checkout? Click below to continue to Square for secure payment.
+          </p>
+          
+          <div className="flex justify-between">
+            <button 
+              onClick={prevStep}
+              className="py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Back
+            </button>
+            
+            <button 
+              onClick={() => alert('Square checkout would be integrated here')}
+              className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="mt-6">
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(step / 4) * 100}%` }}
+          ></div>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Step {step} of 4</p>
       </div>
     </div>
   );
