@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { FormData } from '../IntakeForm';
+import { FormData } from './IntakeForm';
 
 interface SquareCheckoutProps {
   formData: FormData;
