@@ -67,7 +67,7 @@
     "tailwindcss": "^3.4.4",
     "tailwindcss-animate": "^1.0.7",
 
-    "use-places-autocomplete": "^1.24.1",
+    "use-places-autocomplete": "latest",
     "zod": "^3.22.4"
   },
 
