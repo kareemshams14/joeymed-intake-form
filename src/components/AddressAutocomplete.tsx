@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
@@ -30,7 +32,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  // Florida cities with zip codes
+  /* ----------------------------- data -------------------------------- */
   const floridaCities = [
     { city: 'Miami', state: 'FL', zipCodes: ['33101', '33125', '33126', '33127', '33128', '33129', '33130', '33131', '33132', '33133', '33134', '33135'] },
     { city: 'Orlando', state: 'FL', zipCodes: ['32801', '32802', '32803', '32804', '32805', '32806', '32807', '32808', '32809', '32810'] },
@@ -44,192 +46,127 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     { city: 'Palm Beach', state: 'FL', zipCodes: ['33401', '33402', '33403', '33404', '33405', '33406', '33407', '33408', '33409', '33410'] },
   ];
 
-  // Common street types
   const streetTypes = ['St', 'Ave', 'Blvd', 'Dr', 'Ln', 'Rd', 'Way', 'Pl', 'Ct', 'Ter'];
 
-  // Generate address suggestions based on input
-  const generateSuggestions = (input: string): AddressSuggestion[] => {
-    if (!input || input.length < 3) return [];
-    
-    const inputLower = input.toLowerCase();
-    const suggestions: AddressSuggestion[] = [];
-    
-    // Check if input contains numbers (likely a street address)
-    const containsNumbers = /\d/.test(input);
-    
-    if (containsNumbers) {
-      // Generate street address suggestions
-      for (const cityData of floridaCities) {
-        for (let i = 0; i < 3; i++) { // Limit to 3 suggestions per city
-          const streetNumber = Math.floor(Math.random() * 9000) + 1000;
-          const streetName = `${getRandomStreetName()} ${streetTypes[Math.floor(Math.random() * streetTypes.length)]}`;
-          const zipCode = cityData.zipCodes[Math.floor(Math.random() * cityData.zipCodes.length)];
-          
-          const address = `${streetNumber} ${streetName}`;
-          
-          // Only add if it matches the input in some way
-          if (address.toLowerCase().includes(inputLower) || 
-              cityData.city.toLowerCase().includes(inputLower) ||
-              zipCode.includes(input)) {
-            suggestions.push({
-              address,
-              city: cityData.city,
-              state: cityData.state,
-              zipCode
-            });
-          }
-        }
-      }
-    } else {
-      // Generate city-based suggestions
-      for (const cityData of floridaCities) {
-        if (cityData.city.toLowerCase().includes(inputLower)) {
-          for (let i = 0; i < 3; i++) { // Limit to 3 suggestions per matching city
-            const streetNumber = Math.floor(Math.random() * 9000) + 1000;
-            const streetName = `${getRandomStreetName()} ${streetTypes[Math.floor(Math.random() * streetTypes.length)]}`;
-            const zipCode = cityData.zipCodes[Math.floor(Math.random() * cityData.zipCodes.length)];
-            
-            suggestions.push({
-              address: `${streetNumber} ${streetName}`,
-              city: cityData.city,
-              state: cityData.state,
-              zipCode
-            });
-          }
-        }
-      }
-    }
-    
-    // If we have too few suggestions, add some random ones
-    if (suggestions.length < 3) {
-      const randomCity = floridaCities[Math.floor(Math.random() * floridaCities.length)];
-      for (let i = suggestions.length; i < 3; i++) {
-        const streetNumber = Math.floor(Math.random() * 9000) + 1000;
-        const streetName = `${getRandomStreetName()} ${streetTypes[Math.floor(Math.random() * streetTypes.length)]}`;
-        const zipCode = randomCity.zipCodes[Math.floor(Math.random() * randomCity.zipCodes.length)];
-        
-        suggestions.push({
-          address: `${streetNumber} ${streetName}`,
-          city: randomCity.city,
-          state: randomCity.state,
-          zipCode
-        });
-      }
-    }
-    
-    return suggestions.slice(0, 5); // Limit to 5 suggestions total
-  };
-
-  // Random street name generator
-  const getRandomStreetName = (): string => {
-    const streetNames = [
-      'Oak', 'Maple', 'Pine', 'Cedar', 'Elm', 'Main', 'Park', 'Lake', 'Hill', 'River',
-      'Washington', 'Jefferson', 'Lincoln', 'Adams', 'Madison', 'Monroe', 'Jackson',
-      'Sunset', 'Sunrise', 'Ocean', 'Beach', 'Bay', 'Harbor', 'Island', 'Palm',
-      'Magnolia', 'Cypress', 'Willow', 'Birch', 'Aspen'
+  /* -------------------------- utilities ------------------------------ */
+  const getRandomStreetName = () => {
+    const names = [
+      'Oak','Maple','Pine','Cedar','Elm','Main','Park','Lake','Hill','River',
+      'Washington','Jefferson','Lincoln','Adams','Madison','Monroe','Jackson',
+      'Sunset','Sunrise','Ocean','Beach','Bay','Harbor','Island','Palm',
+      'Magnolia','Cypress','Willow','Birch','Aspen',
     ];
-    
-    return streetNames[Math.floor(Math.random() * streetNames.length)];
+    return names[Math.floor(Math.random()*names.length)];
   };
 
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    
-    if (value.length >= 3) {
-      setLoading(true);
-      
-      // Simulate API call delay
-      setTimeout(() => {
-        try {
-          const newSuggestions = generateSuggestions(value);
-          setSuggestions(newSuggestions);
-          setShowSuggestions(true);
-          setLoading(false);
-        } catch (err) {
-          console.error('Error generating address suggestions:', err);
-          setError('Failed to get address suggestions. Please try again.');
-          setLoading(false);
-        }
-      }, 300);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
+  const generateSuggestions = (value: string): AddressSuggestion[] => {
+    if (value.length < 3) return [];
+    const lower = value.toLowerCase();
+    const out: AddressSuggestion[] = [];
+    const hasNum = /\d/.test(value);
 
-  // Handle suggestion selection
-  const handleSuggestionClick = (suggestion: AddressSuggestion) => {
-    setInputValue(suggestion.address);
-    setSuggestions([]);
-    setShowSuggestions(false);
-    onAddressSelect(suggestion);
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const pushIfMatch = (sug: AddressSuggestion) => {
       if (
-        inputRef.current && 
-        !inputRef.current.contains(event.target as Node) && 
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
+        sug.address.toLowerCase().includes(lower) ||
+        sug.city.toLowerCase().includes(lower) ||
+        sug.zipCode.includes(value)
+      ) out.push(sug);
+    };
+
+    floridaCities.forEach((c) => {
+      for (let i=0;i<3;i++) {
+        const num = Math.floor(Math.random()*9000)+1000;
+        const street = `${getRandomStreetName()} ${streetTypes[Math.floor(Math.random()*streetTypes.length)]}`;
+        const zip = c.zipCodes[Math.floor(Math.random()*c.zipCodes.length)];
+        const sug = { address:`${num} ${street}`, city:c.city, state:c.state, zipCode:zip };
+        if (hasNum) pushIfMatch(sug);
+        else if (c.city.toLowerCase().includes(lower)) pushIfMatch(sug);
       }
-    };
+    });
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    // ensure at least 3 suggestions
+    while (out.length<3) {
+      const c = floridaCities[Math.floor(Math.random()*floridaCities.length)];
+      const num = Math.floor(Math.random()*9000)+1000;
+      const street = `${getRandomStreetName()} ${streetTypes[Math.floor(Math.random()*streetTypes.length)]}`;
+      const zip = c.zipCodes[Math.floor(Math.random()*c.zipCodes.length)];
+      out.push({ address:`${num} ${street}`, city:c.city, state:c.state, zipCode:zip });
+    }
+    return out.slice(0,5);
+  };
 
+  /* --------------------------- events -------------------------------- */
+  const onInput = (e:React.ChangeEvent<HTMLInputElement>)=>{
+    const val=e.target.value;
+    setInputValue(val);
+    if(val.length>=3){
+      setLoading(true);
+      setTimeout(()=>{
+        try{
+          setSuggestions(generateSuggestions(val));
+          setShowSuggestions(true);
+        }catch(err){
+          console.error(err);
+          setError('Suggestion error');
+        }finally{setLoading(false);}
+      },300);
+    }else{setShowSuggestions(false);setSuggestions([]);}  
+  };
+
+  const choose = (s:AddressSuggestion)=>{
+    setInputValue(s.address);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    onAddressSelect(s);
+  };
+
+  /* outside click */
+  useEffect(()=>{
+    const handler=(e:MouseEvent)=>{
+      if(
+        inputRef.current && !inputRef.current.contains(e.target as Node) &&
+        suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)
+      ) setShowSuggestions(false);
+    };
+    document.addEventListener('mousedown',handler);
+    return ()=>document.removeEventListener('mousedown',handler);
+  },[]);
+
+  /* --------------------------- render -------------------------------- */
   return (
-    <div className="address-autocomplete">
+    <div className="address-autocomplete relative w-full">
       <input
         ref={inputRef}
         type="text"
         value={inputValue}
-        onChange={handleInputChange}
-        placeholder="Start typing your address..."
-        className="address-input"
-        onFocus={() => inputValue.length >= 3 && setShowSuggestions(true)}
+        onChange={onInput}
+        placeholder="Start typing your address…"
+        className="w-full px-3 py-2 border rounded-md"
+        onFocus={()=> inputValue.length>=3 && setShowSuggestions(true)}
       />
-      
-      {loading && (
-        <div className="loading-indicator">
-          <span>Loading suggestions...</span>
-        </div>
-      )}
-      
-      {error && (
-        <div className="error-message">
-          <span>{error}</span>
-        </div>
-      )}
-      
-      {showSuggestions && suggestions.length > 0 && (
-        <motion.div 
+
+      {loading && <p className="text-sm text-gray-500 mt-1">Loading…</p>}
+      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+
+      {showSuggestions && suggestions.length>0 && (
+        <motion.div
           ref={suggestionsRef}
-          className="suggestions-container"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          className="absolute z-10 w-full bg-white border rounded-md shadow-md mt-1 overflow-hidden"
+          initial={{opacity:0, y:-8}}
+          animate={{opacity:1, y:0}}
+          exit={{opacity:0, y:-8}}
+          transition={{duration:0.2}}
         >
-          {suggestions.map((suggestion, index) => (
-            <div
-              key={index}
-              className="suggestion-item"
-              onClick={() => handleSuggestionClick(suggestion)}
+          {suggestions.map((s,i)=>(
+            <button
+              key={i}
+              type="button"
+              onClick={()=>choose(s)}
+              className="w-full text-left px-3 py-2 hover:bg-gray-50"
             >
-              <div className="suggestion-address">{suggestion.address}</div>
-              <div className="suggestion-details">
-                {suggestion.city}, {suggestion.state} {suggestion.zipCode}
-              </div>
-            </div>
+              <div className="font-medium text-sm">{s.address}</div>
+              <div className="text-xs text-gray-500">{s.city}, {s.state} {s.zipCode}</div>
+            </button>
           ))}
         </motion.div>
       )}
