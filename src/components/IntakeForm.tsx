@@ -159,7 +159,17 @@ const IntakeForm: React.FC = () => {
   const StepAddress = () => (
     <motion.div key="s2" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Address</h3>
-      <AddressAutocomplete onChange={(addr:any)=>setData((p)=>({...p,...addr}))}/>
+      <AddressAutocomplete
+  onAddressSelect={(addr) =>
+    setData((prev) => ({
+      ...prev,
+      address: addr.address,
+      city: addr.city,
+      state: addr.state,
+      zipCode: addr.zipCode,
+    }))
+  }
+/>
       {errors.address && <p className="error">{errors.address}</p>}
       <div className="nav"><button onClick={back} className="btn-outline">Back</button><button onClick={next} className="btn-primary">Continue</button></div>
     </motion.div>
