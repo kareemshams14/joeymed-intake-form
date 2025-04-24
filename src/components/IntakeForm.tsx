@@ -185,7 +185,8 @@ const IntakeForm: React.FC = () => {
         </label>
       ))}
       {errors.selectedItem && <p className="error">{errors.selectedItem}</p>}
-      {data.selectedItem && <TreatmentInfographic treatmentId={data.selectedItem}/>}  
+      {data.selectedItem && (
+  <TreatmentInfographic treatmentId={data.selectedItem as any} />}  
       <div className="nav"><button onClick={back} className="btn-outline">Back</button><button onClick={next} className="btn-primary">Continue</button></div>
     </motion.div>
   );
