@@ -1,167 +1,139 @@
-'use client';
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
 interface TreatmentInfographicProps {
   treatmentId: string;
-  className?: string;
+  stats: Array<{ value: string; label: string }>;
+  benefits: string[];
 }
 
 const TreatmentInfographic: React.FC<TreatmentInfographicProps> = ({
   treatmentId,
-  className = ""
+  stats,
+  benefits
 }) => {
-  // Define infographic content for each treatment vertical
-  const infographics: Record<string, {
-    title: string;
-    description: string;
-    stats: Array<{ value: string; label: string }>;
-    benefits: string[];
-    imageUrl?: string;
-  }> = {
+  // Treatment-specific colors and icons
+  const treatmentThemes = {
     'weight-loss': {
-      title: 'Weight Loss Treatment',
-      description: 'Our medically supervised weight loss program helps you achieve sustainable results through personalized treatment plans.',
-      stats: [
-        { value: '95%', label: 'of patients see results within 4 weeks' },
-        { value: '30+', label: 'pounds average weight loss in 6 months' },
-        { value: '85%', label: 'report improved energy levels' }
-      ],
-      benefits: [
-        'Personalized medication and dosing',
-        'Medical supervision throughout your journey',
-        'Nutritional guidance and support',
-        'Regular check-ins with healthcare providers'
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      primaryColor: '#10b981', // green
+      secondaryColor: 'rgba(16, 185, 129, 0.1)',
+      icon: '⚖️'
     },
-    'erectile-dysfunction': {
-      title: 'Erectile Dysfunction Treatment',
-      description: 'Effective, discreet treatment options for erectile dysfunction delivered to your door.',
-      stats: [
-        { value: '90%', label: 'of patients report improved function' },
-        { value: '30', label: 'minutes average onset of action' },
-        { value: '4-6', label: 'hours of effectiveness' }
-      ],
-      benefits: [
-        'FDA-approved medications',
-        'Discreet packaging and delivery',
-        'Ongoing medical support',
-        'Personalized treatment plans'
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+    'ed-treatment': {
+      primaryColor: '#3b82f6', // blue
+      secondaryColor: 'rgba(59, 130, 246, 0.1)',
+      icon: '💪'
     },
     'sexual-health': {
-      title: 'Sexual Health Treatment',
-      description: 'Comprehensive sexual health solutions for improved wellness and confidence.',
-      stats: [
-        { value: '93%', label: 'patient satisfaction rate' },
-        { value: '24/7', label: 'access to medical professionals' },
-        { value: '100%', label: 'confidential consultations' }
-      ],
-      benefits: [
-        'Holistic approach to sexual health',
-        'Treatment for multiple conditions',
-        'Regular follow-ups and adjustments',
-        'Educational resources and support'
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1511688878353-3a2f5be94cd7?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      primaryColor: '#ec4899', // pink
+      secondaryColor: 'rgba(236, 72, 153, 0.1)',
+      icon: '❤️'
     },
-    'anti-aging': {
-      title: 'Anti-Aging & Wellness',
-      description: 'Rejuvenate your body and mind with our comprehensive anti-aging treatments and wellness programs.',
-      stats: [
-        { value: '87%', label: 'report improved skin appearance' },
-        { value: '75%', label: 'experience increased energy levels' },
-        { value: '92%', label: 'would recommend to friends' }
-      ],
-      benefits: [
-        'Hormone optimization therapy',
-        'Personalized supplement regimens',
-        'Skin rejuvenation treatments',
-        'Comprehensive wellness approach'
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
-    },
-    'travel-kits': {
-      title: 'Travel Health Kits',
-      description: 'Be prepared for your adventures with our comprehensive travel health kits tailored to your destination.',
-      stats: [
-        { value: '100%', label: 'customized to your destination' },
-        { value: '24/7', label: 'travel health support' },
-        { value: '50+', label: 'countries covered' }
-      ],
-      benefits: [
-        'Destination-specific medications',
-        'Emergency antibiotics',
-        'Motion sickness prevention',
-        'Traveler\'s diarrhea treatment'
-      ],
-      imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+    'longevity': {
+      primaryColor: '#8b5cf6', // purple
+      secondaryColor: 'rgba(139, 92, 246, 0.1)',
+      icon: '⏱️'
     }
   };
 
-  const infographic = infographics[treatmentId] || {
-    title: 'Treatment Information',
-    description: 'Please select a treatment to see detailed information.',
-    stats: [],
-    benefits: []
+  const theme = treatmentThemes[treatmentId] || treatmentThemes['weight-loss'];
+
+  // Treatment-specific content
+  const treatmentContent = {
+    'weight-loss': {
+      title: 'Weight Loss Program',
+      description: 'Our medically supervised weight loss program helps you achieve sustainable results through personalized treatment plans.',
+      imageUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      additionalInfo: 'Free consultation with our healthcare providers is included after purchase. If you're not prescribed the medication, we'll issue a full refund.'
+    },
+    'ed-treatment': {
+      title: 'ED Treatment',
+      description: 'Effective treatment for erectile dysfunction with FDA-approved medications and ongoing support.',
+      imageUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      additionalInfo: 'Free consultation with our healthcare providers is included after purchase. If you're not prescribed the medication, we'll issue a full refund.'
+    },
+    'sexual-health': {
+      title: 'Sexual Health',
+      description: 'Comprehensive sexual health treatments for improved performance, libido, and satisfaction.',
+      imageUrl: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      additionalInfo: 'Free consultation with our healthcare providers is included after purchase. If you're not prescribed the medication, we'll issue a full refund.'
+    },
+    'longevity': {
+      title: 'Longevity Treatment',
+      description: 'Advanced anti-aging and longevity treatments to help you look and feel younger.',
+      imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      additionalInfo: 'Free consultation with our healthcare providers is included after purchase. If you're not prescribed the medication, we'll issue a full refund.'
+    }
   };
 
+  const content = treatmentContent[treatmentId] || treatmentContent['weight-loss'];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}
-    >
-      <div className="p-5">
-        <h3 className="text-xl font-bold text-blue-600 mb-2">{infographic.title}</h3>
-        <p className="text-gray-600 mb-4">{infographic.description}</p>
-        
-        {infographic.stats.length > 0 && (
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            {infographic.stats.map((stat, index) => (
-              <div key={index} className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{stat.value}</div>
-                <div className="text-xs text-gray-600">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {infographic.benefits.length > 0 && (
-          <div className="mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Key Benefits</h4>
-            <ul className="space-y-1">
-              {infographic.benefits.map((benefit, index) => (
-                <li key={index} className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <span className="text-gray-700">{benefit}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-      
-      {infographic.imageUrl && (
-        <div className="h-40 bg-gray-100 overflow-hidden">
-          <div 
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: `url(${infographic.imageUrl})` }}
-          ></div>
+    <div className="treatment-infographic" style={{ borderColor: theme.primaryColor }}>
+      <div className="infographic-header" style={{ backgroundColor: theme.secondaryColor }}>
+        <div className="treatment-icon" style={{ backgroundColor: theme.primaryColor }}>
+          <span>{theme.icon}</span>
         </div>
-      )}
-      
-      <div className="bg-blue-50 p-4 border-t border-blue-100">
-        <p className="text-sm text-blue-800">
-          Consult with our healthcare providers to determine if this treatment is right for you.
-        </p>
+        <h3 style={{ color: theme.primaryColor }}>{content.title}</h3>
       </div>
-    </motion.div>
+      
+      <div className="infographic-content">
+        <p className="treatment-description">{content.description}</p>
+        
+        <motion.div 
+          className="stats-container"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {stats.map((stat, index) => (
+            <div key={index} className="stat-item">
+              <div className="stat-inner" style={{ backgroundColor: theme.secondaryColor }}>
+                <div className="stat-value" style={{ color: theme.primaryColor }}>
+                  {stat.value}
+                </div>
+                <div className="stat-label">
+                  {stat.label}
+                </div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+        
+        <div className="benefits-list">
+          <h4>Key Benefits</h4>
+          {benefits.map((benefit, index) => (
+            <motion.div 
+              key={index} 
+              className="benefit-item"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 * index }}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="24" 
+                height="24" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke={theme.primaryColor} 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>{benefit}</span>
+            </motion.div>
+          ))}
+        </div>
+        
+        <div className="treatment-info" style={{ backgroundColor: theme.secondaryColor, borderColor: theme.primaryColor }}>
+          <p>{content.additionalInfo}</p>
+        </div>
+      </div>
+    </div>
   );
 };
 
