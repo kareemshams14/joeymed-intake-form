@@ -1,271 +1,153 @@
-'use client';
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-// Define the FormData interface to match what's used in IntakeForm
-interface FormData {
-  isFloridaResident: boolean;
-  isOver18: boolean;
-  name: string;
-  email: string;
-  phone: string;
-  selectedTreatment: string;
-  healthQuestions: {
-    [key: string]: string | boolean;
-  };
-  consent: boolean;
-}
-
 interface SquareCheckoutProps {
-  formData: FormData;
-  selectedUpsells: string[];
-  treatments: { id: string; name: string; price: number }[];
-  treatmentUpsells: { [key: string]: { id: string; name: string; price: number }[] };
+  formData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    selectedTreatment: string;
+    selectedPackage: string;
+  };
+  treatments: any[];
   onBack: () => void;
 }
 
 const SquareCheckout: React.FC<SquareCheckoutProps> = ({
   formData,
-  selectedUpsells,
   treatments,
-  treatmentUpsells,
   onBack
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Calculate total based on selections
-  const calculateTotal = () => {
-    let total = 0;
-    
-    // Add treatment price
-    const treatment = treatments.find(t => t.id === formData.selectedTreatment);
-    if (treatment) {
-      total += treatment.price;
-    }
-    
-    // Add upsell prices
-    if (formData.selectedTreatment && selectedUpsells.length > 0) {
-      const upsells = treatmentUpsells[formData.selectedTreatment] || [];
-      selectedUpsells.forEach(upsellId => {
-        const upsell = upsells.find(u => u.id === upsellId);
-        if (upsell) {
-          total += upsell.price;
-        }
-      });
-    }
-    
-    return total.toFixed(2);
-  };
+  const [orderSummary, setOrderSummary] = useState<{
+    packageName: string;
+    packagePrice: number;
+    treatmentName: string;
+  } | null>(null);
 
-  // Get selected treatment name
-  const getSelectedTreatmentName = () => {
-    const treatment = treatments.find(t => t.id === formData.selectedTreatment);
-    return treatment ? treatment.name : '';
-  };
-
-  // Get selected upsell names
-  const getSelectedUpsellNames = () => {
-    if (!formData.selectedTreatment || selectedUpsells.length === 0) {
-      return [];
-    }
-    
-    const upsells = treatmentUpsells[formData.selectedTreatment] || [];
-    return selectedUpsells.map(upsellId => {
-      const upsell = upsells.find(u => u.id === upsellId);
-      return upsell ? upsell.name : '';
-    }).filter(name => name !== '');
-  };
-
-  // Initialize Square Web Payments SDK
   useEffect(() => {
-    const initializeSquare = async () => {
+    // Generate order summary based on selected treatment and package
+    const selectedTreatment = treatments.find(t => t.id === formData.selectedTreatment);
+    if (selectedTreatment) {
+      const selectedPackage = selectedTreatment.packages.find(p => p.id === formData.selectedPackage);
+      if (selectedPackage) {
+        setOrderSummary({
+          packageName: selectedPackage.name,
+          packagePrice: selectedPackage.price,
+          treatmentName: selectedTreatment.name
+        });
+      }
+    }
+  }, [formData, treatments]);
+
+  const handleCheckout = () => {
+    setIsLoading(true);
+    setError(null);
+
+    // Simulate API call to create Square checkout
+    setTimeout(() => {
       try {
-        setIsLoading(true);
+        // In a real implementation, this would call your backend to create a Square checkout
+        // and redirect the user to the Square checkout page
         
-        // In a real implementation, you would load the Square Web Payments SDK
-        // and initialize it with your app ID and location ID
-        // For example:
-        /*
-        const payments = window.Square.payments(process.env.NEXT_PUBLIC_SQUARE_APP_ID, process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID);
-        
-        const card = await payments.card();
-        await card.attach('#card-container');
-        */
-        
-        // For demo purposes, we'll simulate the initialization
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // For demonstration purposes, we'll simulate a successful checkout
+        window.location.href = `https://joey-med.square.site/?name=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}&email=${encodeURIComponent(formData.email)}&package=${encodeURIComponent(orderSummary?.packageName || '')}`;
         
         setIsLoading(false);
       } catch (err) {
-        console.error('Error initializing Square:', err);
-        setError('Failed to initialize payment system. Please try again.');
+        console.error('Error creating Square checkout:', err);
+        setError('Failed to create checkout. Please try again.');
         setIsLoading(false);
       }
-    };
-    
-    initializeSquare();
-    
-    // Add Square script to the page
-    const script = document.createElement('script');
-    script.src = 'https://sandbox.web.squarecdn.com/v1/square.js';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      // Clean up script when component unmounts
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  // Handle payment submission
-  const handlePaymentSubmission = async () => {
-    try {
-      setIsLoading(true);
-      
-      // In a real implementation, you would use the Square Web Payments SDK
-      // to tokenize the payment method and send it to your server
-      // For example:
-      /*
-      const result = await card.tokenize();
-      if (result.status === 'OK') {
-        // Send the token to your server to complete the payment
-        const response = await fetch('/api/process-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sourceId: result.token,
-            amount: calculateTotal(),
-            formData,
-            selectedUpsells,
-          }),
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          // Payment successful, redirect to success page
-          window.location.href = '/success';
-        } else {
-          setError(data.error || 'Payment failed. Please try again.');
-        }
-      } else {
-        setError(result.errors[0].message);
-      }
-      */
-      
-      // For demo purposes, we'll simulate the payment process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Redirect to a success page or show success message
-      window.location.href = '/success';
-      
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Payment error:', err);
-      setError('Payment processing failed. Please try again.');
-      setIsLoading(false);
-    }
+    }, 1500);
   };
 
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
-  };
+  if (!orderSummary) {
+    return <div className="loading">Loading order summary...</div>;
+  }
 
   return (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md"
+    <motion.div 
+      className="checkout-container"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold text-blue-600 mb-6">Checkout</h2>
+      <h2>Order Summary</h2>
       
-      <div className="space-y-6">
-        <div className="bg-gray-50 p-4 rounded-md">
-          <h3 className="font-medium text-gray-900 mb-2">Order Summary</h3>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>{getSelectedTreatmentName()}</span>
-              <span>${treatments.find(t => t.id === formData.selectedTreatment)?.price.toFixed(2)}</span>
-            </div>
-            
-            {getSelectedUpsellNames().map((name, index) => {
-              const upsellId = selectedUpsells[index];
-              const upsell = treatmentUpsells[formData.selectedTreatment]?.find(u => u.id === upsellId);
-              
-              return (
-                <div key={upsellId} className="flex justify-between text-sm">
-                  <span>{name}</span>
-                  <span>${upsell?.price.toFixed(2)}</span>
-                </div>
-              );
-            })}
-            
-            <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between font-medium">
-              <span>Total</span>
-              <span>${calculateTotal()}</span>
-            </div>
-          </div>
+      <div className="order-details">
+        <div className="order-item">
+          <div className="item-name">{orderSummary.treatmentName}</div>
+          <div className="item-package">{orderSummary.packageName}</div>
+          <div className="item-price">${orderSummary.packagePrice.toFixed(2)}</div>
         </div>
         
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Payment Information</h3>
-          
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2">Initializing payment system...</span>
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 text-red-600 p-4 rounded-md">
-              {error}
-            </div>
-          ) : (
-            <>
-              <div className="border border-gray-300 rounded-md p-4">
-                <div id="card-container" className="min-h-[100px] flex items-center justify-center">
-                  <p className="text-gray-500">
-                    In a real implementation, the Square payment form would appear here.
-                  </p>
-                </div>
-              </div>
-              
-              <p className="text-sm text-gray-500">
-                Your payment information is securely processed by Square. We do not store your card details.
-              </p>
-            </>
-          )}
+        <div className="order-total">
+          <div className="total-label">Total</div>
+          <div className="total-price">${orderSummary.packagePrice.toFixed(2)}</div>
         </div>
       </div>
       
-      <div className="mt-8 flex justify-between">
-        <button
+      <div className="checkout-info">
+        <div className="info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </div>
+        <div className="info-text">
+          <p>Free consultation with our healthcare providers is included after purchase. If you're not prescribed the medication, we'll issue a full refund.</p>
+        </div>
+      </div>
+      
+      <div className="checkout-actions">
+        <button 
+          className="back-button"
           onClick={onBack}
           disabled={isLoading}
-          className="py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           Back
         </button>
         
-        <button
-          onClick={handlePaymentSubmission}
-          disabled={isLoading || !!error}
-          className={`py-2 px-4 rounded-md text-white ${
-            isLoading || error
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+        <button 
+          className="checkout-button"
+          onClick={handleCheckout}
+          disabled={isLoading}
         >
-          {isLoading ? 'Processing...' : 'Complete Payment'}
+          {isLoading ? (
+            <span className="loading-spinner"></span>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+              </svg>
+              Proceed to Payment
+            </>
+          )}
         </button>
+      </div>
+      
+      {error && (
+        <div className="checkout-error">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+      
+      <div className="secure-checkout">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Secure checkout powered by Square</span>
       </div>
     </motion.div>
   );
