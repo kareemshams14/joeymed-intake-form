@@ -18,13 +18,13 @@ const handler: Handler = async () => {
     const items = (result.objects ?? [])
       .map((o) => {
         const v = o.itemData?.variations?.[0]?.itemVariationData;
-        const cents = v?.priceMoney?.amount;
-        if (!v || cents === undefined) return null; // skip items without a price
+        const cents = v?.priceMoney?.amount ?? null;
+        if (cents == null) return null; // skip items without a price
         return {
           id: o.id,
           name: o.itemData!.name,
           price: cents / 100, // convert to USD
-        };
+        } as const;
       })
       .filter(Boolean);
 
