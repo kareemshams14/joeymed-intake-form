@@ -134,6 +134,13 @@ const IntakeForm: React.FC = () => {
         if (!data.selectedTreatment) e.selectedTreatment = 'Pick a treatment';
         break;
       }
+      case 4: {
+        if (data.selectedTreatment === 'weight-loss') {
+          if (!data.weight) e.weight = 'Current weight required';
+          if (!data.targetWeight) e.targetWeight = 'Target weight required';
+        }
+        break;
+      }
       case 5: {
         if (!data.privacy || !data.telehealth || !data.hipaa) e.consents = 'All consents required';
         break;
@@ -143,6 +150,14 @@ const IntakeForm: React.FC = () => {
     }
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+  /* ==== helpers for weight‑loss projection ==== */
+  const weeksToTarget = () => {
+    if (!data.weight || !data.targetWeight) return 0;
+    const lbsToLose = Number(data.weight) - Number(data.targetWeight);
+    if (lbsToLose <= 0) return 0;
+    return Math.ceil(lbsToLose / 1.5); // avg 1‑2 lb → use 1.5 lb/wk
   };
 
   /* ------------- step renderers -------------- */
@@ -204,9 +219,15 @@ const IntakeForm: React.FC = () => {
       <div className="form-group">
         <label>Street address</label>
         <AddressAutocomplete
-          value={data.address}
-          onChange={(addr) =>
-            setData((prev) => ({ ...prev, address: addr.street, city: addr.city, state: addr.state, zipCode: addr.zipCode }))
+          initialAddress={data.address}
+          onAddressSelect={(addr) =>
+            setData((prev) => ({
+              ...prev,
+              address: addr.street,
+              city: addr.city,
+              state: addr.state,
+              zipCode: addr.zipCode,
+            }))
           }
         />
         {errors.address && <p className="error">{errors.address}</p>}
@@ -255,7 +276,34 @@ const IntakeForm: React.FC = () => {
     </motion.div>
   );
 
-  const StepReview = () => (
+  const StepWeightLoss = () => (
+    <motion.div key="s4" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+      <h3 className="step-title">Your weight details</h3>
+      <BMICalculator
+        height={data.height}
+        weight={data.weight as number | ''}
+        onHeightChange={(h) => setData((prev) => ({ ...prev, height: h }))}
+        onWeightChange={(w) => setData((prev) => ({ ...prev, weight: w }))}
+      />
+      <div className="form-group mt-4">
+        <label>Target weight (lbs)</label>
+        <input type="number" name="targetWeight" value={data.targetWeight} onChange={handleChange} />
+        {errors.targetWeight && <p className="error">{errors.targetWeight}</p>}
+      </div>
+      {data.weight && data.targetWeight && (
+        <>
+          <WeightLossGraph currentWeight={Number(data.weight)} targetWeight={Number(data.targetWeight)} weeks={weeksToTarget()} />
+          <BodyVisualization height={data.height} currentWeight={Number(data.weight)} targetWeight={Number(data.targetWeight)} />
+        </>
+      )}
+      <div className="nav">
+        <button onClick={back} className="btn-outline">Back</button>
+        <button onClick={next} className="btn-primary">Continue</button>
+      </div>
+    </motion.div>
+  );
+
+  const StepConsents = () => (
     <motion.div key="s5" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Consents</h3>
       <label className="check"><input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> I agree to the Privacy Policy</label>
@@ -275,8 +323,10 @@ const IntakeForm: React.FC = () => {
     </motion.div>
   );
 
-  /* ------------------ render ------------------ */
-  const steps = [StepWelcome, StepPersonal, StepAddress, StepTreatment, StepReview, StepCheckout];
+  /* ------------------ assemble steps ------------------ */
+  const steps = [StepWelcome, StepPersonal, StepAddress, StepTreatment];
+  if (data.selectedTreatment === 'weight-loss') steps.push(StepWeightLoss);
+  steps.push(StepConsents, StepCheckout);
 
   return (
     <div className="intake-form">
@@ -288,6 +338,5 @@ const IntakeForm: React.FC = () => {
 export default IntakeForm;
 
 /* ------------------------------------------------------------------
-   Minimal Tailwind‑like utility classes (if using global CSS)
+   Minimal Tailwind‑like utility classes (global CSS stubs)
 ------------------------------------------------------------------- */
-/* .card { @apply bg-white rounded-xl shadow-lg p-6 w-full max-w-md; } etc. */
