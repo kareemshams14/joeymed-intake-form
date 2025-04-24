@@ -85,14 +85,17 @@ const IntakeForm: React.FC = () => {
 
   /* ------------------------- 3.3  Handlers --------------------------*/
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  const { name, value, type } = target;
+  const isCheckbox = type === 'checkbox';
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: isCheckbox ? (target as HTMLInputElement).checked : value,
+  }));
+};
 
   const selectTreatment = (treatmentId: string) =>
     setFormData((prev) => ({ ...prev, selectedTreatment: treatmentId, selectedPackage: '' }));
