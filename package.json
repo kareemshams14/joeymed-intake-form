@@ -13,7 +13,6 @@
     "cmdk": "^1.1.1",
     "vaul": "^1.1.2",
     "@radix-ui/react-accordion": "^1.1.2",
-    "@netlify/functions": "^3.1.2",
     "sonner": "^2.0.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-aspect-ratio": "^1.0.3",
@@ -64,7 +63,8 @@
     "zod": "^3.22.4",
     "input-otp": "latest",
     "react-resizable-panels": "latest",
-    "square": "^42.0.0"
+    "@square/square": "^39.1.0",
+    "@netlify/functions": "^4.30.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
