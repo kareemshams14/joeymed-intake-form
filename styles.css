@@ -1,0 +1,409 @@
+/* Typography improvements inspired by Eden form */
+:root {
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --color-text-primary: #333333;
+  --color-text-secondary: #555555;
+  --color-heading: #222222;
+  --color-button-text: #ffffff;
+  --color-button-bg: #2563eb;
+  --color-button-hover: #1d4ed8;
+  --color-input-border: #d1d5db;
+  --color-input-focus: #3b82f6;
+  --color-card-bg: #ffffff;
+  --color-card-shadow: rgba(0, 0, 0, 0.1);
+  --color-progress-bg: #e5e7eb;
+  --color-progress-fill: #10b981;
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --border-radius: 0.5rem;
+}
+
+/* Global typography settings */
+body, html {
+  font-family: var(--font-primary);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f7fa;
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-heading);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+/* Question text styling */
+.question-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+/* Option text styling */
+.option-text {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Form label styling */
+label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Input field styling */
+input, select, textarea {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius);
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button styling */
+button {
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-button-text);
+  background-color: var(--color-button-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--color-button-hover);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Helper text styling */
+.helper-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* Error text styling */
+.error-text {
+  font-size: 0.875rem;
+  color: var(--color-error);
+  margin-top: 0.25rem;
+}
+
+/* Progress indicator styling */
+.progress-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.progress-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--color-progress-bg);
+  margin: 0 0.25rem;
+}
+
+.progress-dot.active {
+  background-color: var(--color-progress-fill);
+}
+
+/* Card styling */
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 6px var(--color-card-shadow);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Form row styling */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -0.5rem;
+}
+
+.form-group {
+  flex: 1 1 100%;
+  padding: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .form-group.half {
+    flex: 0 0 50%;
+  }
+}
+
+/* Treatment option styling */
+.treatment-option {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.treatment-option:hover {
+  border-color: var(--color-input-focus);
+}
+
+.treatment-option.selected {
+  border-color: var(--color-input-focus);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Consent section styling */
+.consent-section {
+  margin: 2rem 0;
+}
+
+.consent-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.consent-item input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.consent-item label {
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+/* Info container styling */
+.info-container {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.info-container h2 {
+  color: var(--color-success);
+  margin-bottom: 0.75rem;
+}
+
+/* Health option styling */
+.health-option {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.health-option:hover {
+  border-color: var(--color-input-focus);
+}
+
+.health-option.selected {
+  border-color: var(--color-input-focus);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Package option styling */
+.package-option {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.package-option:hover {
+  border-color: var(--color-input-focus);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.package-option.selected {
+  border-color: var(--color-input-focus);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.package-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.package-price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-input-focus);
+}
+
+.package-features {
+  margin-top: 1rem;
+}
+
+.package-feature {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.package-feature svg {
+  color: var(--color-success);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Statistics styling */
+.stats-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-item {
+  flex: 1 1 33.333%;
+  padding: 0.5rem;
+}
+
+.stat-inner {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-input-focus);
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* Benefits list styling */
+.benefits-list {
+  margin: 1.5rem 0;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.benefit-item svg {
+  color: var(--color-success);
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Trustpilot reviews styling */
+.reviews-container {
+  margin: 2rem 0;
+}
+
+.review-item {
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.review-author {
+  font-weight: 600;
+  margin-right: 0.75rem;
+}
+
+.review-stars {
+  color: #00b67a; /* Trustpilot green */
+}
+
+.review-content {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+/* Address autocomplete styling */
+.address-autocomplete {
+  position: relative;
+}
+
+.suggestions-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid var(--color-input-border);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
