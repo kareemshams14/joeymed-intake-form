@@ -1,6 +1,4 @@
-'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LineChart, 
@@ -16,93 +14,129 @@ import {
 interface WeightLossGraphProps {
   currentWeight: number;
   targetWeight: number;
-  weightUnit: 'lb' | 'kg';
-  weeksToTarget: number;
-  className?: string;
 }
 
 const WeightLossGraph: React.FC<WeightLossGraphProps> = ({
   currentWeight,
-  targetWeight,
-  weightUnit,
-  weeksToTarget,
-  className = ""
+  targetWeight
 }) => {
-  // Generate weight loss projection data
-  const generateWeightLossData = () => {
-    if (!currentWeight || !targetWeight || !weeksToTarget || currentWeight <= targetWeight) {
-      return [];
+  const [weightData, setWeightData] = useState<any[]>([]);
+  const [weeksTillTarget, setWeeksTillTarget] = useState<number>(0);
+  
+  useEffect(() => {
+    generateWeightLossProjection();
+  }, [currentWeight, targetWeight]);
+  
+  const generateWeightLossProjection = () => {
+    // Safety check
+    if (currentWeight <= targetWeight) {
+      setWeightData([
+        { week: 0, weight: currentWeight, target: targetWeight }
+      ]);
+      setWeeksTillTarget(0);
+      return;
     }
-
+    
+    // Calculate weight difference
     const weightDifference = currentWeight - targetWeight;
-    const weeklyLoss = weightDifference / weeksToTarget;
     
+    // Calculate weeks needed based on 1-2 pounds per week (using 1.5 as average)
+    // 1 pound = 0.45359237 kg
+    const weeksTillTargetCalc = Math.ceil(weightDifference / 1.5);
+    setWeeksTillTarget(weeksTillTargetCalc);
+    
+    // Generate weekly projection data
     const data = [];
+    const weeklyLoss = weightDifference / weeksTillTargetCalc;
     
-    // Start with current weight at week 0
-    data.push({
-      week: 0,
-      weight: currentWeight,
-      goal: null
-    });
-    
-    // Generate weekly projections
-    for (let week = 1; week <= weeksToTarget; week++) {
+    for (let week = 0; week <= weeksTillTargetCalc; week++) {
       const projectedWeight = currentWeight - (weeklyLoss * week);
       data.push({
-        week,
+        week: week,
         weight: Math.round(projectedWeight * 10) / 10,
-        goal: week === weeksToTarget ? targetWeight : null
+        target: targetWeight
       });
     }
     
-    return data;
+    setWeightData(data);
   };
-
-  const data = generateWeightLossData();
   
-  if (data.length === 0) {
-    return (
-      <div className={`p-4 bg-gray-50 rounded-lg text-center ${className}`}>
-        <p className="text-gray-500">Please enter valid current and target weights to see your weight loss projection.</p>
-      </div>
-    );
-  }
-
+  const formatDate = (weeksFromNow: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + (weeksFromNow * 7));
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="weight-tooltip">
+          <p className="tooltip-date">{formatDate(label)}</p>
+          <p className="tooltip-weight">
+            Projected Weight: <span>{payload[0].value} lbs</span>
+          </p>
+          <p className="tooltip-target">
+            Target: <span>{payload[1].value} lbs</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`p-4 bg-white rounded-lg border border-gray-200 ${className}`}
-    >
-      <h3 className="font-medium text-lg mb-4">Weight Loss Projection</h3>
-      
-      <div className="mb-4">
-        <p className="text-sm text-gray-700">
-          This graph shows your projected weight loss journey from {currentWeight} {weightUnit} to {targetWeight} {weightUnit} over {weeksToTarget} weeks, 
-          based on a steady rate of {((currentWeight - targetWeight) / weeksToTarget).toFixed(1)} {weightUnit} per week.
+    <div className="weight-loss-graph">
+      <div className="graph-header">
+        <h3>Your Weight Loss Journey</h3>
+        <p className="graph-subtitle">
+          Based on a healthy rate of 1-2 pounds per week
         </p>
       </div>
       
-      <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="graph-stats">
+        <div className="stat-item">
+          <span className="stat-label">Current</span>
+          <span className="stat-value">{currentWeight} lbs</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Target</span>
+          <span className="stat-value">{targetWeight} lbs</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">To Lose</span>
+          <span className="stat-value">{currentWeight - targetWeight} lbs</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Timeline</span>
+          <span className="stat-value">{weeksTillTarget} weeks</span>
+        </div>
+      </div>
+      
+      <motion.div 
+        className="graph-container"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart
-            data={data}
+            data={weightData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="week" 
-              label={{ value: 'Weeks', position: 'insideBottomRight', offset: -5 }} 
+              label={{ value: 'Weeks', position: 'insideBottomRight', offset: -10 }}
+              tickFormatter={(week) => formatDate(week)}
             />
             <YAxis 
-              label={{ value: `Weight (${weightUnit})`, angle: -90, position: 'insideLeft' }}
-              domain={[Math.floor(targetWeight * 0.95), Math.ceil(currentWeight * 1.05)]}
+              domain={[
+                Math.min(targetWeight - 5, Math.floor(targetWeight * 0.95)),
+                Math.max(currentWeight + 5, Math.ceil(currentWeight * 1.05))
+              ]}
+              label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft' }}
             />
-            <Tooltip 
-              formatter={(value) => [`${value} ${weightUnit}`, 'Weight']}
-              labelFormatter={(label) => `Week ${label}`}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Line 
               type="monotone" 
@@ -114,31 +148,40 @@ const WeightLossGraph: React.FC<WeightLossGraphProps> = ({
             />
             <Line 
               type="monotone" 
-              dataKey="goal" 
+              dataKey="target" 
               stroke="#10b981" 
               strokeWidth={2}
-              dot={{ r: 6 }}
-              name="Goal Weight"
+              strokeDasharray="5 5"
+              name="Target Weight"
             />
           </LineChart>
         </ResponsiveContainer>
-      </div>
+      </motion.div>
       
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <div className="p-2 bg-blue-50 rounded">
-          <p className="text-xs text-gray-500">Starting Weight</p>
-          <p className="font-bold text-blue-600">{currentWeight} {weightUnit}</p>
-        </div>
-        <div className="p-2 bg-green-50 rounded">
-          <p className="text-xs text-gray-500">Target Weight</p>
-          <p className="font-bold text-green-600">{targetWeight} {weightUnit}</p>
-        </div>
-        <div className="p-2 bg-purple-50 rounded">
-          <p className="text-xs text-gray-500">Weekly Loss</p>
-          <p className="font-bold text-purple-600">{((currentWeight - targetWeight) / weeksToTarget).toFixed(1)} {weightUnit}</p>
+      <div className="weight-milestones">
+        <h4>Key Milestones</h4>
+        <div className="milestones-list">
+          {weightData.filter((data, index) => 
+            index > 0 && index % 4 === 0 && index < weightData.length - 1
+          ).map((data, index) => (
+            <div key={index} className="milestone-item">
+              <div className="milestone-date">{formatDate(data.week)}</div>
+              <div className="milestone-weight">{data.weight} lbs</div>
+              <div className="milestone-progress">
+                {Math.round(((currentWeight - data.weight) / (currentWeight - targetWeight)) * 100)}% complete
+              </div>
+            </div>
+          ))}
+          {weightData.length > 1 && (
+            <div className="milestone-item target">
+              <div className="milestone-date">{formatDate(weightData[weightData.length - 1].week)}</div>
+              <div className="milestone-weight">{targetWeight} lbs</div>
+              <div className="milestone-progress">Goal achieved!</div>
+            </div>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
