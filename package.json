@@ -62,7 +62,8 @@
     "use-places-autocomplete": "latest",
     "zod": "^3.22.4",
     "input-otp": "latest",
-    "react-resizable-panels": "latest"
+    "react-resizable-panels": "latest",
+    "square": "^42.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
