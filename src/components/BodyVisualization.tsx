@@ -1,379 +1,238 @@
-'use client';
-
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface BodyVisualizationProps {
-  currentWeight?: number;
-  targetWeight?: number;
-  weightUnit?: 'lb' | 'kg';
-  height?: number;
-  heightUnit?: 'in' | 'cm';
-  className?: string;
+  height: { feet: number; inches: number };
+  currentWeight: number;
+  targetWeight: number;
+  gender?: 'male' | 'female';
 }
 
 const BodyVisualization: React.FC<BodyVisualizationProps> = ({
+  height,
   currentWeight,
   targetWeight,
-  weightUnit = 'lb',
-  height,
-  heightUnit = 'in',
-  className = ""
+  gender = 'male'
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [rotation, setRotation] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [zoom, setZoom] = useState(1);
-  const [viewMode, setViewMode] = useState<'current' | 'target' | 'comparison'>('comparison');
+  const [isRotating, setIsRotating] = useState(false);
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [showTarget, setShowTarget] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const startX = useRef<number>(0);
 
-  // Convert height to inches for calculations
-  const getHeightInInches = (): number => {
-    if (!height) return 70; // Default height (5'10")
-    
-    if (heightUnit === 'cm') {
-      return height / 2.54;
-    }
-    return height;
+  // Calculate BMI for both current and target weights
+  const calculateBMI = (weight: number) => {
+    const totalInches = (height.feet * 12) + height.inches;
+    return (weight / (totalInches * totalInches)) * 703;
   };
 
-  // Convert weight to pounds for calculations
-  const getWeightInPounds = (weight: number | undefined): number => {
-    if (!weight) return 180; // Default weight
-    
-    if (weightUnit === 'kg') {
-      return weight * 2.20462;
-    }
-    return weight;
+  const currentBMI = calculateBMI(currentWeight);
+  const targetBMI = calculateBMI(targetWeight);
+
+  // Determine body type based on BMI
+  const getBodyType = (bmi: number) => {
+    if (bmi < 18.5) return 'underweight';
+    if (bmi >= 18.5 && bmi < 25) return 'normal';
+    if (bmi >= 25 && bmi < 30) return 'overweight';
+    return 'obese';
   };
 
-  // Calculate BMI
-  const calculateBMI = (weightLbs: number, heightInches: number): number => {
-    return (weightLbs * 703) / (heightInches * heightInches);
+  const currentBodyType = getBodyType(currentBMI);
+  const targetBodyType = getBodyType(targetBMI);
+
+  // Handle mouse/touch events for rotation
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsRotating(true);
+    startX.current = e.clientX;
   };
 
-  // Draw body shape based on height and weight
-  const drawBody = (
-    ctx: CanvasRenderingContext2D, 
-    heightInches: number, 
-    weightLbs: number, 
-    color: string,
-    alpha: number = 1
-  ) => {
-    const canvas = ctx.canvas;
-    const centerX = canvas.width / 2;
-    
-    // Calculate body proportions based on BMI
-    const bmi = calculateBMI(weightLbs, heightInches);
-    
-    // Scale height to fit canvas
-    const scaleFactor = canvas.height / (heightInches * 1.2);
-    const scaledHeight = heightInches * scaleFactor;
-    
-    // Calculate body width based on BMI
-    let bodyWidthFactor = 0.2;
-    if (bmi < 18.5) {
-      bodyWidthFactor = 0.15; // Underweight
-    } else if (bmi >= 18.5 && bmi < 25) {
-      bodyWidthFactor = 0.2; // Normal weight
-    } else if (bmi >= 25 && bmi < 30) {
-      bodyWidthFactor = 0.25; // Overweight
-    } else {
-      bodyWidthFactor = 0.3; // Obese
-    }
-    
-    // Apply 3D effect with rotation
-    const bodyWidth = scaledHeight * bodyWidthFactor;
-    const perspectiveWidth = bodyWidth * Math.abs(Math.cos(rotation));
-    
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    
-    // Draw head
-    const headRadius = scaledHeight * 0.07;
-    ctx.beginPath();
-    ctx.arc(centerX, headRadius + 20, headRadius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    
-    // Draw body
-    ctx.beginPath();
-    
-    // Neck
-    const neckY = headRadius * 2 + 20;
-    const neckWidth = headRadius * 0.8;
-    
-    // Shoulders
-    const shoulderY = neckY + scaledHeight * 0.05;
-    const shoulderWidth = perspectiveWidth * 1.2;
-    
-    // Waist
-    const waistY = shoulderY + scaledHeight * 0.25;
-    const waistWidth = perspectiveWidth * 0.9;
-    
-    // Hips
-    const hipY = waistY + scaledHeight * 0.1;
-    const hipWidth = perspectiveWidth * (bmi >= 25 ? 1.1 : 1.0);
-    
-    // Legs
-    const legY = hipY + scaledHeight * 0.1;
-    const legBottom = scaledHeight;
-    const legWidth = perspectiveWidth * 0.5;
-    
-    // Draw torso (trapezoid shape)
-    ctx.beginPath();
-    ctx.moveTo(centerX - neckWidth, neckY);
-    ctx.lineTo(centerX - shoulderWidth, shoulderY);
-    ctx.lineTo(centerX - waistWidth, waistY);
-    ctx.lineTo(centerX - hipWidth, hipY);
-    ctx.lineTo(centerX - legWidth, legY);
-    ctx.lineTo(centerX + legWidth, legY);
-    ctx.lineTo(centerX + hipWidth, hipY);
-    ctx.lineTo(centerX + waistWidth, waistY);
-    ctx.lineTo(centerX + shoulderWidth, shoulderY);
-    ctx.lineTo(centerX + neckWidth, neckY);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw legs
-    ctx.beginPath();
-    ctx.moveTo(centerX - legWidth, legY);
-    ctx.lineTo(centerX - legWidth, legBottom);
-    ctx.lineTo(centerX - legWidth/3, legBottom);
-    ctx.lineTo(centerX - legWidth/3, legY);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX + legWidth/3, legY);
-    ctx.lineTo(centerX + legWidth/3, legBottom);
-    ctx.lineTo(centerX + legWidth, legBottom);
-    ctx.lineTo(centerX + legWidth, legY);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw arms
-    const armTop = shoulderY + scaledHeight * 0.02;
-    const armBottom = waistY + scaledHeight * 0.1;
-    const armWidth = perspectiveWidth * 0.2;
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX - shoulderWidth, armTop);
-    ctx.lineTo(centerX - shoulderWidth - armWidth, armTop + scaledHeight * 0.05);
-    ctx.lineTo(centerX - shoulderWidth - armWidth, armBottom);
-    ctx.lineTo(centerX - shoulderWidth + armWidth, armBottom);
-    ctx.lineTo(centerX - shoulderWidth + armWidth, armTop + scaledHeight * 0.05);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX + shoulderWidth, armTop);
-    ctx.lineTo(centerX + shoulderWidth + armWidth, armTop + scaledHeight * 0.05);
-    ctx.lineTo(centerX + shoulderWidth + armWidth, armBottom);
-    ctx.lineTo(centerX + shoulderWidth - armWidth, armBottom);
-    ctx.lineTo(centerX + shoulderWidth - armWidth, armTop + scaledHeight * 0.05);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.restore();
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsRotating(true);
+    startX.current = e.touches[0].clientX;
   };
 
-  // Draw the 3D visualization
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isRotating) return;
+    const deltaX = e.clientX - startX.current;
+    setRotationAngle(prev => (prev + deltaX * 0.5) % 360);
+    startX.current = e.clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isRotating) return;
+    const deltaX = e.touches[0].clientX - startX.current;
+    setRotationAngle(prev => (prev + deltaX * 0.5) % 360);
+    startX.current = e.touches[0].clientX;
+  };
+
+  const handleMouseUp = () => {
+    setIsRotating(false);
+  };
+
+  const handleTouchEnd = () => {
+    setIsRotating(false);
+  };
+
+  // Add and remove event listeners
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const heightInches = getHeightInInches();
-    const currentWeightLbs = getWeightInPounds(currentWeight);
-    const targetWeightLbs = getWeightInPounds(targetWeight);
-    
-    // Apply zoom
-    ctx.save();
-    ctx.scale(zoom, zoom);
-    ctx.translate((canvas.width * (1 - zoom)) / (2 * zoom), (canvas.height * (1 - zoom)) / (2 * zoom));
-    
-    // Draw body based on view mode
-    if (viewMode === 'current' || !targetWeight) {
-      drawBody(ctx, heightInches, currentWeightLbs, '#3b82f6');
-    } else if (viewMode === 'target') {
-      drawBody(ctx, heightInches, targetWeightLbs, '#10b981');
-    } else {
-      // Comparison view
-      drawBody(ctx, heightInches, currentWeightLbs, '#3b82f6', 0.6);
-      drawBody(ctx, heightInches, targetWeightLbs, '#10b981', 0.6);
-    }
-    
-    ctx.restore();
-  }, [rotation, zoom, viewMode, currentWeight, targetWeight, height, heightUnit, weightUnit]);
 
-  // Handle mouse/touch events for rotation
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    setStartX(e.clientX);
-  };
-  
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
+    const handleMouseLeave = () => {
+      setIsRotating(false);
+    };
+
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
+  // Get body silhouette based on body type and gender
+  const getBodySilhouette = (bodyType: string, gender: string) => {
+    // In a real implementation, these would be actual SVG paths or 3D models
+    // For this example, we'll use placeholder representations
     
-    const deltaX = e.clientX - startX;
-    setRotation(rotation + deltaX * 0.01);
-    setStartX(e.clientX);
-  };
-  
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-  
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-  
-  // Handle touch events
-  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
-    setStartX(e.touches[0].clientX);
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDragging) return;
+    const silhouettes = {
+      male: {
+        underweight: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C40,50 35,60 35,70 L35,120 C35,130 30,140 25,150 L20,200 L30,200 L35,250 L40,250 L45,300 L55,300 L60,250 L65,250 L70,200 L80,200 L75,150 C70,140 65,130 65,120 L65,70 C65,60 60,50 50,50 Z" fill="#3b82f6" stroke="#2563eb" stroke-width="2"/>
+          </svg>
+        `,
+        normal: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C38,50 32,60 32,70 L32,120 C32,130 27,140 22,150 L17,200 L27,200 L32,250 L37,250 L42,300 L58,300 L63,250 L68,250 L73,200 L83,200 L78,150 C73,140 68,130 68,120 L68,70 C68,60 62,50 50,50 Z" fill="#10b981" stroke="#059669" stroke-width="2"/>
+          </svg>
+        `,
+        overweight: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C35,50 25,60 25,70 L25,120 C25,130 20,140 15,150 L10,200 L20,200 L25,250 L30,250 L35,300 L65,300 L70,250 L75,250 L80,200 L90,200 L85,150 C80,140 75,130 75,120 L75,70 C75,60 65,50 50,50 Z" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+          </svg>
+        `,
+        obese: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C30,50 20,60 20,70 L20,120 C20,130 15,140 10,150 L5,200 L15,200 L20,250 L25,250 L30,300 L70,300 L75,250 L80,250 L85,200 L95,200 L90,150 C85,140 80,130 80,120 L80,70 C80,60 70,50 50,50 Z" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+          </svg>
+        `
+      },
+      female: {
+        underweight: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C42,50 38,60 38,70 L38,100 C38,110 45,120 50,125 C55,120 62,110 62,100 L62,70 C62,60 58,50 50,50 Z M38,100 L38,120 C38,130 33,140 28,150 L23,200 L33,200 L38,250 L43,250 L48,300 L52,300 L57,250 L62,250 L67,200 L77,200 L72,150 C67,140 62,130 62,120 L62,100 Z" fill="#3b82f6" stroke="#2563eb" stroke-width="2"/>
+          </svg>
+        `,
+        normal: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C40,50 35,60 35,70 L35,100 C35,110 42,120 50,125 C58,120 65,110 65,100 L65,70 C65,60 60,50 50,50 Z M35,100 L35,120 C35,130 30,140 25,150 L20,200 L30,200 L35,250 L40,250 L45,300 L55,300 L60,250 L65,250 L70,200 L80,200 L75,150 C70,140 65,130 65,120 L65,100 Z" fill="#10b981" stroke="#059669" stroke-width="2"/>
+          </svg>
+        `,
+        overweight: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C37,50 30,60 30,70 L30,100 C30,110 40,120 50,125 C60,120 70,110 70,100 L70,70 C70,60 63,50 50,50 Z M30,100 L30,120 C30,130 25,140 20,150 L15,200 L25,200 L30,250 L35,250 L40,300 L60,300 L65,250 L70,250 L75,200 L85,200 L80,150 C75,140 70,130 70,120 L70,100 Z" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+          </svg>
+        `,
+        obese: `
+          <svg viewBox="0 0 100 300" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,50 C35,50 25,60 25,70 L25,100 C25,110 35,120 50,125 C65,120 75,110 75,100 L75,70 C75,60 65,50 50,50 Z M25,100 L25,120 C25,130 20,140 15,150 L10,200 L20,200 L25,250 L30,250 L35,300 L65,300 L70,250 L75,250 L80,200 L90,200 L85,150 C80,140 75,130 75,120 L75,100 Z" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+          </svg>
+        `
+      }
+    };
     
-    const deltaX = e.touches[0].clientX - startX;
-    setRotation(rotation + deltaX * 0.01);
-    setStartX(e.touches[0].clientX);
-  };
-  
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-  
-  // Handle zoom
-  const handleZoomIn = () => {
-    setZoom(Math.min(zoom + 0.1, 2));
-  };
-  
-  const handleZoomOut = () => {
-    setZoom(Math.max(zoom - 0.1, 0.5));
-  };
-  
-  // Handle view mode change
-  const handleViewModeChange = (mode: 'current' | 'target' | 'comparison') => {
-    setViewMode(mode);
+    return silhouettes[gender][bodyType];
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-lg border border-gray-200 overflow-hidden ${className}`}
-    >
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800">Interactive Body Visualization</h3>
-        <p className="text-sm text-gray-600">Rotate the model to view from different angles</p>
+    <div className="body-visualization">
+      <div className="visualization-header">
+        <h3>Body Visualization</h3>
+        <p className="visualization-subtitle">
+          Interactive 3D model based on your measurements
+        </p>
       </div>
       
-      <div className="p-4">
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <button
-              type="button"
-              onClick={() => handleViewModeChange('current')}
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                viewMode === 'current'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              } border border-gray-200`}
-            >
-              Current
-            </button>
-            {targetWeight && (
-              <button
-                type="button"
-                onClick={() => handleViewModeChange('target')}
-                className={`px-4 py-2 text-sm font-medium ${
-                  viewMode === 'target'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                } border-t border-b border-gray-200`}
-              >
-                Target
-              </button>
-            )}
-            {targetWeight && (
-              <button
-                type="button"
-                onClick={() => handleViewModeChange('comparison')}
-                className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                  viewMode === 'comparison'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                } border border-gray-200`}
-              >
-                Compare
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="visualization-controls">
+        <button 
+          className={`control-button ${!showTarget ? 'active' : ''}`}
+          onClick={() => setShowTarget(false)}
+        >
+          Current
+        </button>
+        <button 
+          className={`control-button ${showTarget ? 'active' : ''}`}
+          onClick={() => setShowTarget(true)}
+        >
+          Target
+        </button>
+      </div>
+      
+      <motion.div 
+        className="visualization-container"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+      >
+        <div 
+          className="body-model"
+          style={{ 
+            transform: `rotateY(${rotationAngle}deg)`,
+            cursor: isRotating ? 'grabbing' : 'grab'
+          }}
+          dangerouslySetInnerHTML={{ 
+            __html: showTarget 
+              ? getBodySilhouette(targetBodyType, gender) 
+              : getBodySilhouette(currentBodyType, gender) 
+          }}
+        />
         
-        <div className="relative">
-          <canvas
-            ref={canvasRef}
-            width={300}
-            height={400}
-            className="mx-auto border border-gray-200 rounded-lg cursor-move"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          />
-          
-          <div className="absolute bottom-4 right-4 flex space-x-2">
-            <button
-              onClick={handleZoomOut}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
-              aria-label="Zoom out"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path>
-              </svg>
-            </button>
-            <button
-              onClick={handleZoomIn}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
-              aria-label="Zoom in"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-              </svg>
-            </button>
-          </div>
+        <div className="rotation-instructions">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z"></path>
+            <path d="M17 12H3"></path>
+            <path d="m11 6-4 6 4 6"></path>
+          </svg>
+          <span>Drag to rotate</span>
         </div>
-        
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Drag to rotate • Use buttons to zoom</p>
-          {currentWeight && targetWeight && (
-            <div className="mt-2 flex justify-center space-x-4">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-600 rounded-full mr-1"></div>
-                <span>Current: {currentWeight} {weightUnit}</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-600 rounded-full mr-1"></div>
-                <span>Target: {targetWeight} {weightUnit}</span>
-              </div>
-            </div>
-          )}
+      </motion.div>
+      
+      <div className="visualization-details">
+        <div className="detail-row">
+          <div className="detail-label">Height:</div>
+          <div className="detail-value">{height.feet}'{height.inches}"</div>
+        </div>
+        <div className="detail-row">
+          <div className="detail-label">Current Weight:</div>
+          <div className="detail-value">{currentWeight} lbs</div>
+        </div>
+        <div className="detail-row">
+          <div className="detail-label">Current BMI:</div>
+          <div className="detail-value">{currentBMI.toFixed(1)}</div>
+        </div>
+        <div className="detail-row">
+          <div className="detail-label">Target Weight:</div>
+          <div className="detail-value">{targetWeight} lbs</div>
+        </div>
+        <div className="detail-row">
+          <div className="detail-label">Target BMI:</div>
+          <div className="detail-value">{targetBMI.toFixed(1)}</div>
         </div>
       </div>
-    </motion.div>
+      
+      <div className="visualization-note">
+        <p>This visualization is an approximation based on height, weight, and BMI. Individual body compositions may vary.</p>
+      </div>
+    </div>
   );
 };
 
