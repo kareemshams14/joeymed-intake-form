@@ -1,30 +1,32 @@
-// netlify/functions/catalog.ts
+// netlify/functions/catalog.ts – safe priceMoney access
 import { Handler } from '@netlify/functions';
-import * as Square from 'square';            // ← namespace import works for all 30-series SDKs
+import * as Square from 'square';
 
-// Single client reused for all invocations
+// ------------------------------------------------------------------
+// Square client (SDK v36.x)
+// ------------------------------------------------------------------
 const client = new Square.Client({
-  environment: Square.Environment.Production,   // or .Sandbox while testing
+  environment: Square.Environment.Production, // change to .Sandbox for tests
   accessToken: process.env.SQUARE_ACCESS_TOKEN!,
 });
 
 const handler: Handler = async () => {
   try {
+    // Pull every ITEM that has at least one variation with a price
     const { result } = await client.catalogApi.listCatalog(undefined, 'ITEM');
-    if (!result.objects) {
-      return { statusCode: 200, body: '[]', headers: { 'Content-Type': 'application/json' } };
-    }
 
-    const items = result.objects
-      .filter((o) => o.itemData?.variations?.[0]?.itemVariationData?.priceMoney)
+    const items = (result.objects ?? [])
       .map((o) => {
-        const v = o.itemData!.variations![0]!.itemVariationData!;
+        const v = o.itemData?.variations?.[0]?.itemVariationData;
+        const cents = v?.priceMoney?.amount;
+        if (!v || cents === undefined) return null; // skip items without a price
         return {
           id: o.id,
           name: o.itemData!.name,
-          price: v.priceMoney!.amount / 100,
+          price: cents / 100, // convert to USD
         };
-      });
+      })
+      .filter(Boolean);
 
     return {
       statusCode: 200,
