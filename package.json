@@ -63,7 +63,7 @@
     "zod": "^3.22.4",
     "input-otp": "latest",
     "react-resizable-panels": "latest",
-    "@square/square": "^39.1.0",
+    "square": "^39.1.0",
     "@netlify/functions": "^3.1.2"
   },
   "devDependencies": {
