@@ -23,7 +23,7 @@ const handler: Handler = async () => {
         return {
           id: o.id,
           name: o.itemData!.name,
-          price: cents / 100, // convert to USD
+          price: Number(cents) / 100, // convert to USD (cents is bigint)
         } as const;
       })
       .filter(Boolean);
