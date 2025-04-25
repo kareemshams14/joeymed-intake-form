@@ -218,6 +218,7 @@ const IntakeForm: FC = () => {
     </motion.div>
   );
 
+  
   const StepCheckout: FC = () => (
     <motion.div key="s5" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
