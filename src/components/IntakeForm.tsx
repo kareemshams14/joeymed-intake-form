@@ -1,11 +1,6 @@
 'use client';
 
-import React, {
-  useState,
-  useEffect,
-  ChangeEvent,
-  FC,
-} from 'react';
+import React, { useState, useEffect, ChangeEvent, FC } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import AddressAutocomplete from './AddressAutocomplete';
 import TreatmentInfographic from './TreatmentInfographic';
@@ -21,7 +16,7 @@ import BodyVisualization from './BodyVisualization';
 export interface CatalogItem {
   id: string;
   name: string;
-  price: number; // USD
+  price: number; // USD dollars already
 }
 
 interface AddressObj {
@@ -111,9 +106,7 @@ const IntakeForm: FC = () => {
 
   /* -------------- handlers ---------------------- */
   const handleChange = (
-    e: ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
@@ -164,7 +157,7 @@ const IntakeForm: FC = () => {
 
   /* ------------------- Steps -------------------- */
   const StepWelcome: FC = () => (
-    <motion.div key="s0" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s0" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h2 className="step-title">Welcome to JoeyMed</h2>
       <p className="mb-6 text-gray-600">Click below to begin your intake.</p>
       <button onClick={next} className="btn-primary">Get Started</button>
@@ -172,7 +165,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepPersonal: FC = () => (
-    <motion.div key="s1" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s1" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Your details</h3>
       <div className="grid grid-cols-2 gap-4">
         <input name="firstName" placeholder="First name" value={data.firstName} onChange={handleChange} />
@@ -188,7 +181,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepAddress: FC = () => (
-    <motion.div key="s2" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s2" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Address</h3>
       <AddressAutocomplete onAddressSelect={(addr: AddressObj) => setData((p) => ({ ...p, ...addr }))} />
       {errors.address && <p className="error">{errors.address}</p>}
@@ -197,7 +190,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepSelectItem: FC = () => (
-    <motion.div key="s3" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s3" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Choose a treatment</h3>
       {loadingItems ? <p>Loading…</p> : items.map((it) => (
         <label key={it.id} className={`option ${data.selectedItem === it.id ? 'selected' : ''}`}>
@@ -215,7 +208,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepConsents: FC = () => (
-    <motion.div key="s4" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s4" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Consents</h3>
       <label className="check"><input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> Privacy Policy</label>
       <label className="check"><input type="checkbox" name="telehealth" checked={data.telehealth} onChange={handleChange} /> Telehealth Consent</label>
@@ -226,7 +219,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepCheckout: FC = () => (
-    <motion.div key="s5" {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div key="s5" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
     </motion.div>
   );
