@@ -151,7 +151,6 @@ const IntakeForm: FC = () => {
   /* ------------------- Steps -------------------- */
   const StepWelcome: FC = () => (
     <motion.div
-      key="s0"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -168,7 +167,6 @@ const IntakeForm: FC = () => {
 
   const StepPersonal: FC = () => (
     <motion.div
-      key="s1"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -222,11 +220,7 @@ const IntakeForm: FC = () => {
         <p className="error mt-2">Please fix the highlighted fields.</p>
       )}
       <div className="nav">
-        <button
-          onClick={back}
-          className="btn-outline"
-          disabled={step === 0}
-        >
+        <button onClick={back} className="btn-outline" disabled={step === 0}>
           Back
         </button>
         <button onClick={next} className="btn-primary">
@@ -238,7 +232,6 @@ const IntakeForm: FC = () => {
 
   const StepAddress: FC = () => (
     <motion.div
-      key="s2"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -247,9 +240,7 @@ const IntakeForm: FC = () => {
     >
       <h3 className="step-title">Address</h3>
       <AddressAutocomplete
-        onAddressSelect={(addr: AddressObj) =>
-          setData((p) => ({ ...p, ...addr }))
-        }
+        onAddressSelect={(addr: AddressObj) => setData((p) => ({ ...p, ...addr }))}
       />
       {errors.address && <p className="error">{errors.address}</p>}
       <div className="nav">
@@ -265,7 +256,6 @@ const IntakeForm: FC = () => {
 
   const StepSelectItem: FC = () => (
     <motion.div
-      key="s3"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -293,11 +283,7 @@ const IntakeForm: FC = () => {
       )}
       {errors.selectedItem && <p className="error">{errors.selectedItem}</p>}
       {data.selectedItem && (
-        <TreatmentInfographic
-          treatmentId={data.selectedItem as any}
-          stats={[]}
-          benefits={[]}
-        />
+        <TreatmentInfographic treatmentId={data.selectedItem as any} stats={[]} benefits={[]} />
       )}
       <TrustpilotReviews />
       <div className="nav">
@@ -309,5 +295,62 @@ const IntakeForm: FC = () => {
         </button>
       </div>
     </motion.div>
+  );
 
-    
+  const StepConsents: FC = () => (
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="card"
+    >
+      <h3 className="step-title">Consents</h3>
+      <label className="check">
+        <input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> I agree to the Privacy Policy
+      </label>
+      <label className="check">
+        <input type="checkbox" name="telehealth" checked={data.telehealth} onChange={handleChange} /> I agree to the Telehealth Consent
+      </label>
+      <label className="check">
+        <input type="checkbox" name="hipaa" checked={data.hipaa} onChange={handleChange} /> I agree to the HIPAA Authorization
+      </label>
+      {errors.consents && <p className="error">{errors.consents}</p>}
+      <div className="nav">
+        <button onClick={back} className="btn-outline">
+          Back
+        </button>
+        <button onClick={next} className="btn-primary">
+          Review Order
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const StepCheckout: FC = () => (
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="card"
+    >
+      <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
+    </motion.div>
+  );
+
+  /* ordered steps list */
+  const steps: FC[] = [StepWelcome, StepPersonal, StepAddress, StepSelectItem, StepConsents, StepCheckout];
+
+  const CurrentStep = steps[step] ?? steps[0];
+
+  return (
+    <div className="intake-form-container">
+      <AnimatePresence mode="wait">
+        <CurrentStep key={step} />
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default IntakeForm;
