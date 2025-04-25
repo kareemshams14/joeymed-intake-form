@@ -202,7 +202,7 @@ const IntakeForm: FC = () => {
       {data.selectedItem && (
         <TreatmentInfographic treatmentId={data.selectedItem as any} stats={[]} benefits={[]} />
       )}
-      <TrustpilotReviews businessUrl="https://www.trustpilot.com/review/joeymed.com" />
+      <TrustpilotReviews />
       <div className="nav"><button onClick={back} className="btn-outline">Back</button><button onClick={next} className="btn-primary">Continue</button></div>
     </motion.div>
   );
