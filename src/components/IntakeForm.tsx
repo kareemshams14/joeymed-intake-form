@@ -175,9 +175,17 @@ const IntakeForm: FC = () => {
       exit="exit"
       className="card text-center"
     >
-      <h2 className="step-title text-2xl font-semibold mb-2 text-gray-900">Welcome to JoeyMed</h2>
+      {/* JoeyMed logo */}
+      <img
+        src="https://www.joeymed.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo2.7dd72441.png&w=1080&q=100"
+        alt="JoeyMed logo"
+        className="mx-auto mb-4 h-14 w-auto"
+      />
+      <h2 className="step-title text-2xl font-semibold mb-2 text-gray-900">
+        Welcome to Joey&nbsp;Med
+      </h2>
       <p className="mb-6 text-gray-600">Click below to begin your intake.</p>
-      <button onClick={next} className={btnPrimary} autoFocus>
+      <button onClick={next} className={btnPrimary}>
         Get Started
       </button>
     </motion.div>
@@ -195,7 +203,7 @@ const IntakeForm: FC = () => {
             onChange={handleChange}
             onKeyDown={handleKeyNav}
             className={inputClass}
-            autoFocus
+            
           />
           <input
             name="lastName"
