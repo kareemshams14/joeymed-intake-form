@@ -184,7 +184,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepPersonal: FC = () => (
-    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Your details</h3>
       <form>
         <div className="grid grid-cols-2 gap-4">
@@ -256,7 +256,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepAddress: FC = () => (
-    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Address</h3>
       <AddressAutocomplete
         onAddressSelect={(addr: AddressObj) => setData((p) => ({ ...p, ...addr }))}
@@ -274,7 +274,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepSelectItem: FC = () => (
-    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Choose a treatment</h3>
       {loadingItems ? (
         <p>Loading…</p>
@@ -315,7 +315,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepConsents: FC = () => (
-    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Consents</h3>
       <label className="check">
         <input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> I agree to the
@@ -342,7 +342,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepCheckout: FC = () => (
-    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
     </motion.div>
   );
