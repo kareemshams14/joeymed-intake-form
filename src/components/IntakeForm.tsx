@@ -200,7 +200,7 @@ const IntakeForm: FC = () => {
       ))}
       {errors.selectedItem && <p className="error">{errors.selectedItem}</p>}
       {data.selectedItem && (
-        <TreatmentInfographic treatmentId={data.selectedItem as any} />
+        <TreatmentInfographic treatmentId={data.selectedItem as any} stats={[]} benefits={[]} />
       )}
       <TrustpilotReviews businessUrl="https://www.trustpilot.com/review/joeymed.com" />
       <div className="nav"><button onClick={back} className="btn-outline">Back</button><button onClick={next} className="btn-primary">Continue</button></div>
@@ -218,7 +218,6 @@ const IntakeForm: FC = () => {
     </motion.div>
   );
 
-  
   const StepCheckout: FC = () => (
     <motion.div key="s5" variants={cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
