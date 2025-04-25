@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, ChangeEvent, FC } from 'react';
+import React, { useState, useEffect, ChangeEvent, FC, KeyboardEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import AddressAutocomplete from './AddressAutocomplete';
 import TreatmentInfographic from './TreatmentInfographic';
@@ -79,6 +79,14 @@ const cardVariants = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 };
 
+// single source of truth for input style so text is dark & visible on gradient bg
+const inputClass =
+  'w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500';
+const btnPrimary =
+  'btn-primary px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50';
+const btnOutline =
+  'btn-outline px-5 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50';
+
 /* ------------------------------------------------------------------
  * Component
  * ---------------------------------------------------------------- */
@@ -111,6 +119,16 @@ const IntakeForm: FC = () => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     setData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleKeyNav = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (!form) return;
+      const index = Array.prototype.indexOf.call(form, e.currentTarget);
+      (form.elements[index + 1] as HTMLElement)?.focus();
+    }
   };
 
   const next = () => validateStep() && setStep((s) => s + 1);
@@ -155,75 +173,82 @@ const IntakeForm: FC = () => {
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="card"
+      className="card text-center"
     >
-      <h2 className="step-title">Welcome to JoeyMed</h2>
+      <h2 className="step-title text-2xl font-semibold mb-2 text-gray-900">Welcome to JoeyMed</h2>
       <p className="mb-6 text-gray-600">Click below to begin your intake.</p>
-      <button onClick={next} className="btn-primary">
+      <button onClick={next} className={btnPrimary} autoFocus>
         Get Started
       </button>
     </motion.div>
   );
 
   const StepPersonal: FC = () => (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="card"
-    >
+    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Your details</h3>
-      <div className="grid grid-cols-2 gap-4">
+      <form>
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            name="firstName"
+            placeholder="First name"
+            value={data.firstName}
+            onChange={handleChange}
+            onKeyDown={handleKeyNav}
+            className={inputClass}
+            autoFocus
+          />
+          <input
+            name="lastName"
+            placeholder="Last name"
+            value={data.lastName}
+            onChange={handleChange}
+            onKeyDown={handleKeyNav}
+            className={inputClass}
+          />
+        </div>
         <input
-          name="firstName"
-          placeholder="First name"
-          value={data.firstName}
+          className={`${inputClass} mt-4`}
+          name="email"
+          placeholder="Email"
+          value={data.email}
           onChange={handleChange}
+          onKeyDown={handleKeyNav}
         />
         <input
-          name="lastName"
-          placeholder="Last name"
-          value={data.lastName}
+          className={`${inputClass} mt-2`}
+          name="confirmEmail"
+          placeholder="Confirm email"
+          value={data.confirmEmail}
           onChange={handleChange}
+          onKeyDown={handleKeyNav}
         />
-      </div>
-      <input
-        className="mt-4"
-        name="email"
-        placeholder="Email"
-        value={data.email}
-        onChange={handleChange}
-      />
-      <input
-        className="mt-2"
-        name="confirmEmail"
-        placeholder="Confirm email"
-        value={data.confirmEmail}
-        onChange={handleChange}
-      />
-      <input
-        className="mt-2"
-        name="dob"
-        type="date"
-        value={data.dob}
-        onChange={handleChange}
-      />
-      <input
-        className="mt-2"
-        name="phone"
-        placeholder="Phone"
-        value={data.phone}
-        onChange={handleChange}
-      />
+        <input
+          className={`${inputClass} mt-2`}
+          name="dob"
+          type="date"
+          value={data.dob}
+          onChange={handleChange}
+          onKeyDown={handleKeyNav}
+        />
+        <input
+          className={`${inputClass} mt-2`}
+          name="phone"
+          placeholder="Phone"
+          value={data.phone}
+          onChange={handleChange}
+          onKeyDown={handleKeyNav}
+        />
+      </form>
+      {errors.firstName && <p className="error">{errors.firstName}</p>}
+      {/* show one generic error */}
       {Object.values(errors).length > 0 && (
         <p className="error mt-2">Please fix the highlighted fields.</p>
       )}
-      <div className="nav">
-        <button onClick={back} className="btn-outline" disabled={step === 0}>
+      <div className="nav mt-4">
+        <button onClick={back} className={btnOutline} disabled={step === 0}>
           Back
         </button>
-        <button onClick={next} className="btn-primary">
+        <button onClick={next} className={btnPrimary}>
           Continue
         </button>
       </div>
@@ -231,23 +256,17 @@ const IntakeForm: FC = () => {
   );
 
   const StepAddress: FC = () => (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="card"
-    >
+    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Address</h3>
       <AddressAutocomplete
         onAddressSelect={(addr: AddressObj) => setData((p) => ({ ...p, ...addr }))}
       />
       {errors.address && <p className="error">{errors.address}</p>}
       <div className="nav">
-        <button onClick={back} className="btn-outline">
+        <button onClick={back} className={btnOutline}>
           Back
         </button>
-        <button onClick={next} className="btn-primary">
+        <button onClick={next} className={btnPrimary}>
           Continue
         </button>
       </div>
@@ -255,13 +274,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepSelectItem: FC = () => (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="card"
-    >
+    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Choose a treatment</h3>
       {loadingItems ? (
         <p>Loading…</p>
@@ -283,14 +296,18 @@ const IntakeForm: FC = () => {
       )}
       {errors.selectedItem && <p className="error">{errors.selectedItem}</p>}
       {data.selectedItem && (
-        <TreatmentInfographic treatmentId={data.selectedItem as any} stats={[]} benefits={[]} />
+        <TreatmentInfographic
+          treatmentId={data.selectedItem as any}
+          stats={[]}
+          benefits={[]}
+        />
       )}
       <TrustpilotReviews />
       <div className="nav">
-        <button onClick={back} className="btn-outline">
+        <button onClick={back} className={btnOutline}>
           Back
         </button>
-        <button onClick={next} className="btn-primary">
+        <button onClick={next} className={btnPrimary}>
           Continue
         </button>
       </div>
@@ -298,29 +315,26 @@ const IntakeForm: FC = () => {
   );
 
   const StepConsents: FC = () => (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="card"
-    >
+    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <h3 className="step-title">Consents</h3>
       <label className="check">
-        <input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> I agree to the Privacy Policy
+        <input type="checkbox" name="privacy" checked={data.privacy} onChange={handleChange} /> I agree to the
+        Privacy Policy
       </label>
       <label className="check">
-        <input type="checkbox" name="telehealth" checked={data.telehealth} onChange={handleChange} /> I agree to the Telehealth Consent
+        <input type="checkbox" name="telehealth" checked={data.telehealth} onChange={handleChange} /> I agree to the
+        Telehealth Consent
       </label>
       <label className="check">
-        <input type="checkbox" name="hipaa" checked={data.hipaa} onChange={handleChange} /> I agree to the HIPAA Authorization
+        <input type="checkbox" name="hipaa" checked={data.hipaa} onChange={handleChange} /> I agree to the HIPAA
+        Authorization
       </label>
       {errors.consents && <p className="error">{errors.consents}</p>}
       <div className="nav">
-        <button onClick={back} className="btn-outline">
+        <button onClick={back} className={btnOutline}>
           Back
         </button>
-        <button onClick={next} className="btn-primary">
+        <button onClick={next} className={btnPrimary}>
           Review Order
         </button>
       </div>
@@ -328,13 +342,7 @@ const IntakeForm: FC = () => {
   );
 
   const StepCheckout: FC = () => (
-    <motion.div
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="card"
-    >
+    <motion.div {...cardVariants} initial="hidden" animate="visible" exit="exit" className="card">
       <SquareCheckout formData={data as any} treatments={items as any} onBack={back} />
     </motion.div>
   );
@@ -345,7 +353,7 @@ const IntakeForm: FC = () => {
   const CurrentStep = steps[step] ?? steps[0];
 
   return (
-    <div className="intake-form-container">
+    <div className="intake-form-container flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-white p-4">
       <AnimatePresence mode="wait">
         <CurrentStep key={step} />
       </AnimatePresence>
